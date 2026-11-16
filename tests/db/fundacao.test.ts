@@ -174,6 +174,28 @@ describe("papéis", () => {
   });
 });
 
+describe("endurecimento", () => {
+  it("usuário altera o próprio nome, mas não o e-mail do perfil", async () => {
+    await db.as(ctx.a.agentId, (q) => q(`update profiles set full_name = 'Novo Nome', email = 'dono.b@exemplo.test' where id = $1`, [ctx.a.agentId]));
+    const [row] = await db.admin(`select full_name, email from profiles where id = $1`, [ctx.a.agentId]);
+    expect(row).toEqual({ full_name: "Novo Nome", email: "atendente.a@exemplo.test" });
+    const res = await db.as(ctx.a.agentId, (q) => q(`update profiles set full_name = 'Hack' where id = $1`, [ctx.a.ownerId]));
+    expect(res.affected).toBe(0);
+  });
+
+  it("a troca de e-mail da conta é refletida no perfil", async () => {
+    const id = await db.createUser("antes@exemplo.test");
+    await db.admin(`update auth.users set email = 'Depois@Exemplo.test' where id = $1`, [id]);
+    expect(await db.admin(`select email from profiles where id = $1`, [id])).toEqual([{ email: "depois@exemplo.test" }]);
+  });
+
+  it("membro não transforma registro real em demonstração", async () => {
+    const [c] = await db.as(ctx.a.ownerId, (q) => q<{ id: string }>(`insert into contacts (organization_id, name) values ($1, 'Real') returning id`, [ctx.a.orgId]));
+    await db.as(ctx.a.ownerId, (q) => q(`update contacts set is_demo = true, name = 'Real editado' where id = $1`, [c!.id]));
+    expect(await db.admin(`select name, is_demo from contacts where id = $1`, [c!.id])).toEqual([{ name: "Real editado", is_demo: false }]);
+  });
+});
+
 describe("convites", () => {
   it("get_invitation só revela convite válido, inclusive para anônimo", async () => {
     const ok = await db.as(null, (q) => q(`select * from public.get_invitation('segredo-1')`));

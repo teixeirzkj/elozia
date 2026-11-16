@@ -11,7 +11,7 @@ import { headers } from "next/headers";
  * uma proteção parcial e gera aviso no log).
  */
 
-export type LimitName = "auth" | "invite" | "message" | "upload" | "import" | "export";
+export type LimitName = "auth" | "invite" | "message" | "upload" | "import" | "export" | "webhook";
 
 const LIMITS: Record<LimitName, { max: number; windowSec: number }> = {
   auth: { max: 8, windowSec: 60 },
@@ -20,6 +20,8 @@ const LIMITS: Record<LimitName, { max: number; windowSec: number }> = {
   upload: { max: 30, windowSec: 60 },
   import: { max: 5, windowSec: 600 },
   export: { max: 20, windowSec: 600 },
+  // Por endereço de origem. Generoso para a Meta, mas contém abuso por requisições não autenticadas.
+  webhook: { max: 1200, windowSec: 60 },
 };
 
 let redis: Redis | null | undefined;

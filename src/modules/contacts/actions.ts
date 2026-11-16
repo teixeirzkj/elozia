@@ -100,9 +100,20 @@ export async function deleteContactAction(contactId: string): Promise<ActionStat
   try {
     const { supabase, membership, user } = await authorize("crm.delete");
     const orgId = membership.organization.id;
+    // Arquivos das conversas do contato (LGPD: a exclusão alcança também as mídias).
+    const { data: media } = await supabase
+      .from("messages")
+      .select("media_path, conversation:conversations!inner (contact_id)")
+      .eq("organization_id", orgId)
+      .eq("conversation.contact_id", contactId)
+      .not("media_path", "is", null)
+      .limit(5000);
+    const paths = (media ?? []).map((m) => m.media_path as string).filter((item) => item.startsWith(`${orgId}/`));
+
     const { error, count } = await supabase.from("contacts").delete({ count: "exact" }).eq("id", contactId).eq("organization_id", orgId);
     if (error) throw error;
     if (!count) return fail("Contato não encontrado.");
+    for (let i = 0; i < paths.length; i += 100) await supabase.storage.from("media").remove(paths.slice(i, i + 100));
     await supabase.from("audit_logs").insert({ organization_id: orgId, actor_id: user.id, action: "contact.deleted", entity: "contact", entity_id: contactId });
     revalidatePath("/contatos");
   } catch (error) {

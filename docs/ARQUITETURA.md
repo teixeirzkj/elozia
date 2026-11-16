@@ -20,7 +20,7 @@ Um único aplicativo Next.js. Sem microsserviços, sem ORM: SQL versionado em `s
 |---|---|
 | next | 16.4.x |
 | react / react-dom | 19.3.x |
-| typescript | 7.0.x |
+| typescript | 6.0.x (a 7.0 ainda não é suportada pelo typescript-eslint) |
 | tailwindcss | 4.3.x |
 | @supabase/supabase-js | 2.119.x |
 | @supabase/ssr | 0.12.x |
@@ -120,19 +120,23 @@ Todas as tabelas abaixo (exceto `organizations` e `profiles`) têm `organization
 ## WhatsApp (Meta Cloud API)
 
 - **Conexão:** Configurações › Canais recebe WABA ID, Phone Number ID e token; o servidor valida na Graph API antes de salvar; o token é criptografado com AES-256-GCM (`ENCRYPTION_KEY`). Interface `ChannelConnector` com implementação `manual`; `embedded_signup` fica previsto.
-- **Webhook:** `GET` responde ao desafio com `META_WEBHOOK_VERIFY_TOKEN`; `POST` lê o corpo bruto, valida `X-Hub-Signature-256` com `META_APP_SECRET` (comparação em tempo constante), registra em `webhook_events` com chave de deduplicação, resolve a agência pelo `phone_number_id` e grava mensagens/status. `wa_message_id` único garante idempotência.
-- **Janela de 24 h:** calculada a partir de `conversations.last_inbound_at`, no servidor. Fora da janela, só template aprovado.
+- **Webhook:** `GET` responde ao desafio com o token global (`META_WEBHOOK_VERIFY_TOKEN`) ou com o token de verificação gerado para um canal; `POST` lê o corpo bruto e valida `X-Hub-Signature-256` em tempo constante. Cada canal usa o aplicativo da Elozia (`META_APP_SECRET`) ou o aplicativo da própria agência (App Secret cifrado no canal); um evento só é aceito se a assinatura conferir com o segredo do canal a que se destina. Depois, as funções `ingest_whatsapp_message` e `apply_whatsapp_status` resolvem a agência pelo `phone_number_id` e gravam de forma atômica e idempotente (`wa_message_id` único).
+- **Identidade do contato:** telefone em E.164 ou, quando a Meta não o envia, o identificador de usuário (`wa_user_id`).
+- **Janela de 24 h:** calculada a partir de `conversations.last_inbound_at`, no servidor, a cada envio e reenvio. Fora da janela, só template aprovado.
+- **Consentimento:** template de marketing exige consentimento registrado; toda mensagem automática (automação ou campanha) exige consentimento e respeita o descadastro.
 - **Mídia:** baixada da Meta pelo servidor para o bucket privado; uploads validados por tipo e tamanho; exibição por URL assinada.
 - **Tempo real:** Supabase Realtime em `conversations` e `messages`.
 
 ## Agendamento e fila
 
-Nada de timers em memória. A tabela `jobs` é a fila; um endpoint `/api/cron/tick` protegido por `CRON_SECRET` reivindica lotes com `for update skip locked`, executa e registra. Falhas reagendam com espera crescente até `max_attempts`. O disparo do tick vem do **Vercel Cron** (a cada minuto exige plano Pro) ou, como alternativa, de **pg_cron + pg_net** no Supabase. Horários são guardados em UTC e interpretados no fuso da agência.
+Nada de timers em memória. A tabela `jobs` é a fila; um endpoint `/api/cron/tick` protegido por `CRON_SECRET` chama `enqueue_due_automations` e `enqueue_due_campaigns` (que criam uma execução por ocorrência, com chave única), reivindica lotes com `claim_jobs` (`for update skip locked`), executa e finaliza com `finish_job`. Falhas reagendam com espera crescente até `max_attempts`; ações já concluídas não se repetem na nova tentativa. Mensagens automáticas só saem entre 8h e 20h no fuso da agência. O disparo do tick vem do **Vercel Cron** (a cada minuto exige plano Pro) ou, como alternativa, de **pg_cron + pg_net** no Supabase. Horários são guardados em UTC e interpretados no fuso da agência.
 
 ## Segurança
 
 - Cabeçalhos: CSP, HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `frame-ancestors 'none'`.
-- Rate limiting (Upstash) em login, cadastro, convites, envio de mensagens e webhook. Sem Upstash configurado, em desenvolvimento usa limitador em memória; em produção a ausência é erro de configuração.
+- Rate limiting (Upstash) em login, cadastro, convites, envio de mensagens, uploads, importação, exportação e webhook. Sem Upstash configurado usa limitador em memória por instância e registra aviso em produção.
+- Indicadores e relatórios são funções SQL que rodam com os direitos do usuário (RLS) e filtram pela agência dele; relatórios exigem papel de gestor.
+- Auditoria completa e riscos aceitos em [SEGURANCA.md](SEGURANCA.md).
 - Variáveis validadas com Zod na inicialização (`lib/env.ts`).
 - Logs sem tokens e sem corpo de mensagens.
 

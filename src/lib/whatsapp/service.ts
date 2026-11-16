@@ -128,7 +128,9 @@ export async function sendToConversation(input: {
 
   const automated = input.origin !== "manual";
   const consent = conv.contact.marketing_consent;
+  // Mensagens automáticas (automações e campanhas) exigem consentimento registrado.
   if (automated && consent === "revoked") return refuse("O contato pediu para não receber mensagens automáticas.", "opt_out");
+  if (automated && consent !== "granted") return refuse("O contato não tem consentimento registrado para mensagens automáticas.", "no_consent");
 
   const window = serviceWindow(conv.last_inbound_at, input.now);
   let payload: StoredPayload;
@@ -212,7 +214,7 @@ export async function sendToConversation(input: {
 export async function deliverMessage(admin: SupabaseClient, orgId: string, messageId: string, loaded?: ConversationRow): Promise<SendResult> {
   const { data: message } = await admin
     .from("messages")
-    .select("id, conversation_id, direction, type, body, status, payload, media_path, media_name, origin, attempts")
+    .select("id, conversation_id, direction, type, body, status, payload, media_path, media_name, origin, attempts, sender_id")
     .eq("organization_id", orgId)
     .eq("id", messageId)
     .maybeSingle();
@@ -275,6 +277,7 @@ export async function deliverMessage(admin: SupabaseClient, orgId: string, messa
         organization_id: orgId,
         conversation_id: conv.id,
         type: "first_response",
+        actor_id: message.sender_id,
         metadata: { seconds: Math.max(0, Math.round((Date.parse(now) - Date.parse(conv.cycle_started_at)) / 1000)) },
       });
     }

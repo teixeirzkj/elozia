@@ -1,99 +1,99 @@
 # Plano de desenvolvimento — Elozia
 
-Legenda: ☐ pendente · ◐ em andamento · ☑ concluído
+Legenda: ☐ pendente · ◐ implementado, falta validar em ambiente real · ☑ concluído
 
 Regra geral de conclusão de qualquer fase: lint, typecheck, testes e build passam; toda tabela nova tem RLS e teste de isolamento; toda tela tem carregamento, erro e vazio; este arquivo é atualizado.
+
+> **Situação em 16/11/2026.** As fases 1 a 5 estão implementadas e passam em lint, typecheck, 197 testes automatizados e build. Elas estão marcadas como ◐ porque **ainda não foram executadas contra um projeto Supabase real nem contra a Meta** — a máquina de desenvolvimento não tinha esses serviços. Os critérios de conclusão que dependem de uso real (uma agência se cadastrar de verdade, receber uma mensagem de verdade) só podem ser dados como cumpridos depois dessa validação. Detalhes em [RELATORIO_MVP.md](RELATORIO_MVP.md).
 
 ## Fase 0 — Planejamento ☑
 
 - ☑ CLAUDE.md, docs/BRIEFING.md, docs/ARQUITETURA.md, docs/PLANO.md
 - ☑ Modelo de dados inicial, estratégia de isolamento, serviços externos, MVP × futuro
 
-## Fase 1 — Fundação ☐
+## Fase 1 — Fundação ◐
 
-Tarefas
-- ☐ Projeto Next.js + TypeScript estrito + Tailwind, ESLint, Vitest, Playwright, `.env.example`
-- ☐ Clientes Supabase (navegador, servidor, admin) e validação de ambiente
-- ☐ Migration: organizations, profiles, memberships, invitations, teams, audit_logs + RLS
-- ☐ Login, cadastro de agência, recuperação/redefinição de senha, logout, proteção de rotas
-- ☐ Convites de colaboradores e papéis (Proprietário, Administrador, Supervisor, Atendente)
-- ☐ Design system e layout: sidebar, header, navegação mobile
-- ☐ Configurações: agência, fuso, perfil, equipe e convites, permissões
-- ☐ Módulos futuros com estado vazio verdadeiro
+- ☑ Projeto Next.js 16 + TypeScript estrito + Tailwind 4, ESLint, Vitest, Playwright, `.env.example`
+- ☑ Clientes Supabase (navegador, servidor, admin) e validação de ambiente
+- ☑ Migration `0001_fundacao`: organizations, profiles, memberships, invitations, teams, audit_logs + RLS
+- ☑ Login, cadastro de agência, recuperação e redefinição de senha, logout, proteção de rotas
+- ☑ Convites por link de uso único e papéis (Proprietário, Administrador, Supervisor, Atendente)
+- ☑ Design system com a marca, sidebar, header, navegação mobile
+- ☑ Configurações: agência, fuso, perfil, equipe e convites, equipes de atendimento, permissões
 
-Critérios de conclusão
-- Uma agência se cadastra, entra, convida um colaborador e ele entra com o papel definido.
-- Usuário sem sessão não acessa a área autenticada; papel insuficiente é recusado no servidor.
-- Testes de banco provam que a agência A não lê nem altera dados da agência B.
+Critérios
+- ☑ Testes de banco provam que a agência A não lê nem altera dados da agência B.
+- ☑ Papel insuficiente é recusado no servidor e no banco (testes).
+- ☐ Uma agência se cadastra, convida um colaborador e ele entra com o papel definido — **falta rodar em Supabase real** (coberto pelo E2E escrito).
 
-## Fase 2 — CRM comercial ☐
+## Fase 2 — CRM comercial ◐
 
-Tarefas
-- ☐ Contatos: CRUD, E.164, origem, etiquetas, responsável, consentimento, histórico, busca/filtros, importação CSV
-- ☐ Catálogo: pacotes e múltiplas saídas, imagem, situação
-- ☐ Funil Kanban: etapas padrão e personalizáveis, cartões, movimentação persistente com histórico
-- ☐ Oportunidades, propostas e reservas (pagamento declarado manualmente)
-- ☐ Ficha do contato com oportunidades, reservas e histórico
-- ☐ Dados de demonstração fictícios, claramente identificados
+- ☑ Contatos: CRUD, E.164, origem, etiquetas, responsável, consentimento, histórico, busca, filtros, importação CSV
+- ☑ Catálogo: pacotes, múltiplas saídas, imagem, situação
+- ☑ Funil Kanban: etapas padrão e personalizáveis, cartões, movimentação persistente com histórico
+- ☑ Oportunidades, propostas e reservas (pagamento declarado manualmente)
+- ☑ Ficha do contato com oportunidades, reservas, tarefas e histórico
+- ☑ Dados de demonstração fictícios e identificados
 
-Critérios de conclusão
-- CRUDs funcionam ponta a ponta com validação e permissões.
-- Mover um cartão persiste, grava histórico e respeita papéis.
-- Testes de CRUD, de movimentação do Kanban e de isolamento passam.
+Critérios
+- ☑ Testes de CRUD, de movimentação do Kanban e de isolamento passam.
+- ☐ CRUDs exercitados pela interface em ambiente real.
 
-## Fase 3 — Atendimento WhatsApp ☐
+## Fase 3 — Atendimento WhatsApp ◐
 
-Tarefas
-- ☐ Configurações › Canais: WABA ID, Phone Number ID, token validado na Meta e criptografado
-- ☐ Webhook: verificação GET, POST com HMAC sobre corpo bruto, idempotência, roteamento por phone_number_id, status
-- ☐ Central de atendimento em três colunas, com Realtime
-- ☐ Texto, imagem, áudio, documento, notas internas, indicadores de envio/leitura
-- ☐ Assumir, transferir (atendente/equipe), concluir, reabrir
-- ☐ Janela de 24 h e templates sincronizados
-- ☐ Bucket privado, uploads validados, URLs assinadas, rate limiting de envio
-- ☐ Mocks de webhook e testes (assinatura, duplicidade, roteamento, permissões, janela, falhas)
+- ☑ Configurações › Canais: WABA ID, Phone Number ID, token validado na Meta e cifrado; conector preparado para Embedded Signup
+- ☑ Webhook: verificação GET, POST com HMAC sobre o corpo bruto, idempotência, roteamento por `phone_number_id`, status
+- ☑ Central de atendimento em três áreas, com Realtime
+- ☑ Texto, imagem, áudio, documento, notas internas, indicadores de envio e leitura
+- ☑ Assumir, transferir (atendente ou equipe), concluir, reabrir
+- ☑ Janela de 24 h e templates sincronizados
+- ☑ Bucket privado, uploads validados, URLs assinadas, rate limiting
+- ☑ Mocks de webhook, script de simulação local e testes
 
-Critérios de conclusão
-- Com credenciais reais, uma agência recebe e responde mensagens. Sem credenciais, o sistema mostra o canal como não conectado — nunca simula conexão.
-- Eventos duplicados ou com assinatura inválida não geram dados.
-- **Validação com número real da Meta depende do proprietário do produto** e é registrada à parte.
+Critérios
+- ☑ Eventos duplicados ou com assinatura inválida não geram dados (testes).
+- ☑ Sem credenciais, o sistema mostra o canal como não conectado; nunca simula conexão.
+- ☐ **Validação com número real da Meta** — depende do proprietário do produto.
 
-## Fase 4 — Automações e campanhas ☐
+## Fase 4 — Automações e campanhas ◐
 
-Tarefas
-- ☐ Fila persistente `jobs` + endpoint de cron (idempotência, concorrência, retentativas, cancelamento)
-- ☐ Regras: gatilho, condições, ações, intervalo, status, histórico
-- ☐ Follow-ups: lead sem atendimento, proposta sem resposta, oportunidade parada, pagamento pendente, viagem próxima, pós-viagem
-- ☐ Ações: criar tarefa, alterar responsável, adicionar etiqueta, mover oportunidade, agendar template
-- ☐ Campanhas por viagem com segmentação, consentimento, template e agendamento
-- ☐ Opt-out, limites de envio, tratamento de erros da Meta
-- ☐ Telas: automações, formulário guiado, campanhas, histórico de envios
+- ☑ Fila persistente `jobs` + endpoint de cron (idempotência, concorrência, retentativas, cancelamento)
+- ☑ Regras: gatilho, condições, ações, intervalo, situação, histórico
+- ☑ Seis follow-ups: lead sem atendimento, proposta sem resposta, oportunidade parada, pagamento pendente, viagem próxima, pós-viagem
+- ☑ Ações: criar tarefa, alterar responsável, adicionar etiqueta, mover oportunidade, enviar template aprovado
+- ☑ Campanhas por viagem com segmentação, consentimento, template e agendamento
+- ☑ Opt-out, limites, horário de envio no fuso da agência, tratamento de erros da Meta
+- ☑ Telas: automações, formulário guiado, campanhas, histórico de envios
 
-Critérios de conclusão
-- Uma regra ativa gera exatamente uma execução por ocorrência, mesmo com ticks concorrentes.
-- Nenhuma mensagem sai para contato sem consentimento ou com opt-out.
-- Testes de agendamento, reprocessamento, duplicidade, cancelamento, janela e isolamento passam.
+Critérios
+- ☑ Uma regra ativa gera exatamente uma execução por ocorrência (teste).
+- ☑ Nenhuma mensagem automática sai sem consentimento ou com opt-out (regra no servidor; público testado no banco).
+- ☐ Execução real pelo agendador da Vercel e envio real de template.
 
-## Fase 5 — Dashboard, relatórios e fechamento do MVP ☐
+## Fase 5 — Dashboard, relatórios e fechamento do MVP ◐
 
-Tarefas
-- ☐ Dashboard com indicadores calculados de dados reais
-- ☐ Relatórios com filtros (período, atendente, viagem) e exportação CSV com controle de acesso
-- ☐ Revisão de usabilidade, responsividade e acessibilidade
-- ☐ Auditoria de segurança (RLS, permissões, tokens, uploads, webhooks, rate limiting, dependências)
-- ☐ Teste E2E do fluxo completo
-- ☐ Documentação de deploy, variáveis, checklists Supabase e Meta, cabeçalhos, monitoramento, backup
-- ☐ docs/RELATORIO_MVP.md
+- ☑ Dashboard com indicadores calculados de dados reais
+- ☑ Oito relatórios com filtros e exportação CSV com controle de acesso
+- ☑ Auditoria de segurança com seis correções ([SEGURANCA.md](SEGURANCA.md))
+- ☑ Teste E2E do fluxo completo escrito; testes de navegador das telas públicas executados
+- ☑ Documentação de deploy, variáveis, checklists Supabase e Meta, cabeçalhos, monitoramento, backup ([DEPLOY.md](DEPLOY.md))
+- ☑ [RELATORIO_MVP.md](RELATORIO_MVP.md)
+- ☐ Revisão manual de usabilidade das telas autenticadas em desktop, tablet e celular (exige ambiente real)
+- ☐ Execução do E2E completo em projeto de testes
 
-Critérios de conclusão
-- Nenhum indicador usa número fictício; sem dados, mostra estado vazio.
-- Relatório do MVP separa com clareza o que foi testado do que depende de serviço externo.
+## Próximos passos (do proprietário do produto)
+
+1. Criar os projetos Supabase (testes e produção) e aplicar as migrations.
+2. Fazer o deploy na Vercel e configurar variáveis, domínio, SMTP e Upstash.
+3. Rodar `npm run test:e2e` com `E2E_ENABLED=1` no projeto de testes.
+4. Conectar um número real e validar o WhatsApp.
+5. Revisar as telas e iniciar o piloto com uma agência.
 
 ## Futuro — fora do MVP
 
-### Fase 6 — Agente de IA (somente após validação do CRM e do WhatsApp com a agência piloto)
+### Fase 6 — Agente de IA ☐ (planejado, não implementado)
 
-Plano técnico e estimativa em docs/PLANO_IA.md. **Implementação só começa depois de aprovação explícita.**
+Plano técnico, componentes e modelo de custos em [PLANO_IA.md](PLANO_IA.md). **Só começa depois de o CRM e o WhatsApp estarem validados com a agência piloto e de aprovação explícita do plano.**
 
 ### Demais itens
 
@@ -101,10 +101,14 @@ Plano técnico e estimativa em docs/PLANO_IA.md. **Implementação só começa d
 - Cobrança recorrente das agências.
 - Embedded Signup da Meta.
 - Gateway de pagamento e integrações com fornecedores.
+- LGPD: exportação de dados do titular e exclusão completa de agência.
+- Segundo fator de autenticação.
 
 ## Decisões em aberto (do proprietário do produto)
 
 - Planos e preços da assinatura.
 - Provedor de e-mail transacional.
-- Plano da Vercel (cron por minuto exige Pro) ou uso de pg_cron no Supabase.
+- Plano da Vercel (cron por minuto exige Pro) ou uso de `pg_cron` no Supabase.
+- Modo de operação na Meta: aplicativo de cada agência ou aplicativo único da Elozia (Tech Provider).
 - Textos jurídicos: Termos de Uso e Política de Privacidade.
+- Provedor e modelos do agente de IA.

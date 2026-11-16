@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { requireMembership } from "@/lib/auth/session";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { NAV_ITEMS } from "@/components/layout/nav";
+import { can, ROLE_LABELS } from "@/lib/permissions";
 import { signOutAction } from "@/modules/auth/actions";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -13,6 +14,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       userEmail={user.email}
       roleLabel={ROLE_LABELS[membership.role]}
       signOut={signOutAction}
+      hiddenNav={NAV_ITEMS.filter((item) => item.requires && !can(membership.role, item.requires)).map((item) => item.href)}
     >
       {children}
     </AppShell>

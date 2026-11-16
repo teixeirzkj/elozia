@@ -3,6 +3,7 @@
 CRM inteligente para agências de viagens. SaaS multiempresa de atendimento (WhatsApp oficial), CRM, funil de vendas e automações, vendido diretamente a agências de viagens e turismo.
 
 Leia antes de trabalhar: [docs/BRIEFING.md](docs/BRIEFING.md), [docs/ARQUITETURA.md](docs/ARQUITETURA.md), [docs/PLANO.md](docs/PLANO.md).
+Operação e estado atual: [docs/DEPLOY.md](docs/DEPLOY.md), [docs/SEGURANCA.md](docs/SEGURANCA.md), [docs/RELATORIO_MVP.md](docs/RELATORIO_MVP.md). Módulo de IA (só plano): [docs/PLANO_IA.md](docs/PLANO_IA.md).
 
 ## Regras que não se negociam
 
@@ -53,6 +54,9 @@ docs/
 - Dinheiro em centavos (`bigint`) + moeda ISO; telefones em E.164; datas em `timestamptz` (UTC) e exibidas no fuso da agência.
 - Mudança de esquema = nova migration; nunca editar migration já aplicada em produção.
 - Toda tabela nova entra em `tests/db` com teste de isolamento entre agências.
+- Em migrations novas, conceda privilégios só às tabelas criadas nelas (`grant ... on public.<tabela>`). Nunca `grant ... on all tables`: isso reabriria `whatsapp_credentials`, `webhook_events` e `jobs`, que são só do servidor.
+- Mensagens do WhatsApp saem sempre por `sendToConversation` (`src/lib/whatsapp/service.ts`), que aplica janela de 24 h, consentimento e opt-out. Não chame a Graph API direto dos módulos.
+- Os testes de banco rodam em PGlite (sem Docker). O que depende de PostgREST, Auth, Storage ou Realtime só é coberto pelo E2E em um projeto Supabase de testes.
 
 ## Papéis
 

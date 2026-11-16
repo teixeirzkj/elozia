@@ -15,14 +15,16 @@ type ShellProps = {
   userEmail: string;
   roleLabel: string;
   signOut: () => Promise<void>;
+  /** Itens do menu que o papel do usuário não acessa. */
+  hiddenNav: string[];
   children: ReactNode;
 };
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, hidden }: { onNavigate?: () => void; hidden: string[] }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Navegação principal" className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+      {NAV_ITEMS.filter((item) => !hidden.includes(item.href)).map(({ href, label, icon: Icon }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
@@ -44,7 +46,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function ProfileMenu({ userName, userEmail, roleLabel, signOut }: Omit<ShellProps, "agencyName" | "children">) {
+function ProfileMenu({ userName, userEmail, roleLabel, signOut }: Omit<ShellProps, "agencyName" | "children" | "hiddenNav">) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -116,7 +118,7 @@ function ProfileMenu({ userName, userEmail, roleLabel, signOut }: Omit<ShellProp
 }
 
 /** Estrutura da área autenticada: sidebar fixa no desktop e gaveta no celular. */
-export function AppShell({ agencyName, userName, userEmail, roleLabel, signOut, children }: ShellProps) {
+export function AppShell({ agencyName, userName, userEmail, roleLabel, signOut, hiddenNav, children }: ShellProps) {
   const [drawer, setDrawer] = useState(false);
   const pathname = usePathname();
 
@@ -147,7 +149,7 @@ export function AppShell({ agencyName, userName, userEmail, roleLabel, signOut, 
             <Logo onDark className="w-32" />
           </Link>
         </div>
-        <NavLinks />
+        <NavLinks hidden={hiddenNav} />
       </aside>
 
       {drawer ? (
@@ -170,7 +172,7 @@ export function AppShell({ agencyName, userName, userEmail, roleLabel, signOut, 
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
-            <NavLinks onNavigate={() => setDrawer(false)} />
+            <NavLinks hidden={hiddenNav} onNavigate={() => setDrawer(false)} />
           </div>
         </div>
       ) : null}

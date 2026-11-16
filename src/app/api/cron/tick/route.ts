@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
   }
   try {
     const summary = await runTick(admin, { workerId: `cron-${randomUUID()}`, budgetMs: 45_000 });
+    // Uma vez por hora, remove registros técnicos com mais de 30 dias.
+    if (new Date().getUTCMinutes() === 0) await admin.rpc("purge_technical_logs");
     return Response.json({ ok: true, ...summary });
   } catch (error) {
     console.error("[cron] tique falhou", (error as { code?: unknown }).code ?? null);

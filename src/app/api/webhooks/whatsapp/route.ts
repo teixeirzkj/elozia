@@ -1,5 +1,6 @@
 import { after, type NextRequest } from "next/server";
 import { optionalServerSecret } from "@/lib/env";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { processWebhookEvents, storeInboundMedia } from "@/lib/whatsapp/service";
 import { authenticateWebhook, channelSecretLookup, verifySubscription } from "@/lib/whatsapp/webhook-handler";
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
 
 /** Recebimento de mensagens e status. A assinatura é conferida sobre o corpo bruto. */
 export async function POST(request: NextRequest) {
+  if (!(await rateLimit("webhook", await clientIp()))) return new Response("Muitas requisições", { status: 429 });
   const rawBody = await request.text();
   if (rawBody.length > MAX_BODY_BYTES) return new Response("Corpo grande demais", { status: 413 });
 

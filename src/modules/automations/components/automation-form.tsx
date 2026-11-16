@@ -272,8 +272,8 @@ export function AutomationForm(props: Props) {
                     onChange={(variables) => update(index, { variables })}
                   />
                   <Alert tone="info">
-                    Enviado somente entre 8h e 20h no fuso da agência. Templates de marketing vão apenas para contatos com
-                    consentimento registrado; quem pediu descadastro nunca recebe mensagens automáticas.
+                    Enviado somente entre 8h e 20h no fuso da agência e apenas para contatos com consentimento registrado.
+                    Quem não autorizou ou pediu descadastro não recebe a mensagem, e a execução registra o motivo.
                   </Alert>
                 </div>
               ) : null}
