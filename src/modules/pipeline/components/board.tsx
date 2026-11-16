@@ -119,7 +119,8 @@ export function Board({ stages, opportunities, timeZone, currentUserId, canMoveA
 
   return (
     <>
-      <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      {/* relative: mantém dentro da área rolável os textos exclusivos de leitores de tela */}
+      <div className="relative -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex min-w-max gap-3">
           {stages.map((stage) => {
             const column = byStage(stage.id);

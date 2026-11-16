@@ -17,13 +17,13 @@ export default async function ImportarContatosPage() {
       </Link>
       <PageHeader title="Importar contatos" description="Envie um arquivo CSV com os contatos da agência." />
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader title="Arquivo" />
           <CardBody>
             <ImportForm />
           </CardBody>
         </Card>
-        <Card className="h-fit">
+        <Card className="h-fit min-w-0">
           <CardHeader title="Formato do arquivo" />
           <CardBody className="space-y-3 text-sm text-fg-muted">
             <p>
