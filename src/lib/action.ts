@@ -111,7 +111,7 @@ export const optInt = (min: number, max: number) =>
 /** Valor em reais digitado ("1.234,56" ou "1234.56") → centavos. */
 export function parseMoneyToCents(input: string): number | null {
   const raw = input.trim().replace(/[^\d,.-]/g, "");
-  if (raw === "") return null;
+  if (raw === "") return input.trim() === "" ? null : Number.NaN;
   const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
   const value = Number(normalized);
   if (!Number.isFinite(value) || value < 0 || value > 1e10) return Number.NaN;

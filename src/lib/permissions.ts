@@ -51,3 +51,8 @@ export function assignableRoles(actor: Role): Role[] {
 export function isRole(value: unknown): value is Role {
   return typeof value === "string" && (ROLES as readonly string[]).includes(value);
 }
+
+/** Gestores (proprietário, administrador, supervisor): equivalem a app.is_manager no banco. */
+export function isManager(role: Role): boolean {
+  return role !== "agent";
+}

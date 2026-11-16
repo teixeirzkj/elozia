@@ -31,6 +31,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Imagens de pacotes passam por Server Action (limite de 4 MB validado no servidor).
+  experimental: { serverActions: { bodySizeLimit: "5mb" } },
   async headers() {
     return [
       {
