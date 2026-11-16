@@ -58,7 +58,9 @@ export function ActionForm({ action, children, className, onSuccess, resetOnSucc
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    // O botão que enviou entra nos dados (permite mais de um botão de envio por formulário).
+    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+    const formData = new FormData(event.currentTarget, submitter instanceof HTMLButtonElement && submitter.name ? submitter : undefined);
     startTransition(() => dispatch(formData));
   }
 
@@ -176,12 +178,15 @@ type SubmitProps = {
   variant?: "primary" | "brand" | "secondary" | "danger";
   className?: string;
   size?: "sm" | "md";
+  /** Identificam qual botão enviou o formulário. */
+  name?: string;
+  value?: string;
 };
 
-export function SubmitButton({ children, variant = "primary", className, size }: SubmitProps) {
+export function SubmitButton({ children, variant = "primary", className, size, name, value }: SubmitProps) {
   const { pending } = useContext(FormContext);
   return (
-    <Button type="submit" variant={variant} size={size} className={className} disabled={pending} aria-busy={pending}>
+    <Button type="submit" name={name} value={value} variant={variant} size={size} className={className} disabled={pending} aria-busy={pending}>
       {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
       {children}
     </Button>
