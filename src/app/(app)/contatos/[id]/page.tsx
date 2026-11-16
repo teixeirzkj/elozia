@@ -14,6 +14,7 @@ import { ContactDialog, EventForm } from "@/modules/contacts/components/contact-
 import { TaskDialog, TaskList } from "@/modules/contacts/components/tasks";
 import { getContact, listContactEvents, listTags, listTasks } from "@/modules/contacts/queries";
 import { CONSENT_LABELS, CONTACT_SOURCES, EVENT_TYPE_LABELS } from "@/modules/crm/types";
+import { StartConversationButton } from "@/modules/inbox/components/conversation-actions";
 import { BookingList, OpportunityList } from "@/modules/pipeline/components/lists";
 import { BookingDialog, OpportunityDialog } from "@/modules/pipeline/components/pipeline-dialogs";
 import { listBookings, listOpportunitiesByContact, listStages } from "@/modules/pipeline/queries";
@@ -67,6 +68,8 @@ export default async function ContatoPage({ params }: { params: Promise<{ id: st
               <MessagesSquare className="h-4 w-4" aria-hidden="true" />
               Abrir conversa
             </LinkButton>
+          ) : contact.phone_e164 && !contact.is_demo ? (
+            <StartConversationButton contactId={contact.id} label="Iniciar conversa" />
           ) : null}
           <ContactDialog contact={contact} members={members} tags={tags} />
           {can(membership.role, "crm.delete") ? (
