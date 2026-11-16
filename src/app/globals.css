@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Design system Elozia
+   Todas as cores e medidas partem destas variáveis. Componentes não usam hex.
+   ========================================================================== */
+
+:root {
+  /* Marca */
+  --elz-black: #0a0a0a;
+  --elz-white: #ffffff;
+  --elz-green: #00df73;
+  --elz-green-strong: #008a47; /* verde legível como texto sobre branco */
+  --elz-green-soft: #e5fcf1;
+
+  /* Neutros */
+  --elz-gray-50: #fafafa;
+  --elz-gray-100: #f4f4f5;
+  --elz-gray-200: #e4e4e7;
+  --elz-gray-300: #d4d4d8;
+  --elz-gray-400: #a1a1aa;
+  --elz-gray-500: #71717a;
+  --elz-gray-600: #52525b;
+  --elz-gray-700: #3f3f46;
+  --elz-gray-800: #27272a;
+  --elz-gray-900: #18181b;
+
+  /* Semânticas */
+  --elz-danger: #c81e1e;
+  --elz-danger-soft: #fdecec;
+  --elz-warning: #9a5b00;
+  --elz-warning-soft: #fff4dc;
+  --elz-info: #1d4ed8;
+  --elz-info-soft: #e8efff;
+
+  /* Papéis de superfície */
+  --elz-bg: var(--elz-gray-50);
+  --elz-surface: var(--elz-white);
+  --elz-surface-muted: var(--elz-gray-100);
+  --elz-border: var(--elz-gray-200);
+  --elz-border-strong: var(--elz-gray-300);
+  --elz-text: var(--elz-black);
+  --elz-text-muted: var(--elz-gray-600);
+  --elz-text-subtle: var(--elz-gray-500);
+
+  --elz-radius-sm: 6px;
+  --elz-radius: 10px;
+  --elz-radius-lg: 14px;
+  --elz-shadow-sm: 0 1px 2px rgb(10 10 10 / 0.05);
+  --elz-shadow: 0 8px 24px -8px rgb(10 10 10 / 0.14);
+  --elz-sidebar-width: 248px;
+  --elz-header-height: 60px;
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: var(--elz-black);
+  --color-brand: var(--elz-green);
+  --color-brand-strong: var(--elz-green-strong);
+  --color-brand-soft: var(--elz-green-soft);
+
+  --color-bg: var(--elz-bg);
+  --color-surface: var(--elz-surface);
+  --color-muted: var(--elz-surface-muted);
+  --color-line: var(--elz-border);
+  --color-line-strong: var(--elz-border-strong);
+  --color-fg: var(--elz-text);
+  --color-fg-muted: var(--elz-text-muted);
+  --color-fg-subtle: var(--elz-text-subtle);
+
+  --color-danger: var(--elz-danger);
+  --color-danger-soft: var(--elz-danger-soft);
+  --color-warning: var(--elz-warning);
+  --color-warning-soft: var(--elz-warning-soft);
+  --color-info: var(--elz-info);
+  --color-info-soft: var(--elz-info-soft);
+
+  --color-sidebar: var(--elz-black);
+  --color-sidebar-line: var(--elz-gray-800);
+  --color-sidebar-fg: var(--elz-gray-300);
+  --color-sidebar-hover: var(--elz-gray-900);
+
+  --radius-sm: var(--elz-radius-sm);
+  --radius-md: var(--elz-radius);
+  --radius-lg: var(--elz-radius-lg);
+  --shadow-card: var(--elz-shadow-sm);
+  --shadow-pop: var(--elz-shadow);
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100%;
+  background: var(--elz-bg);
+  color: var(--elz-text);
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visível e consistente para navegação por teclado */
+:focus-visible {
+  outline: 2px solid var(--elz-green-strong);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--elz-green);
+  color: var(--elz-black);
+}
+
+dialog::backdrop {
+  background: rgb(10 10 10 / 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  /* Campo de formulário base (input, select, textarea) */
+  .elz-field {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid var(--elz-border-strong);
+    border-radius: var(--elz-radius);
+    background: var(--elz-surface);
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--elz-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .elz-field::placeholder {
+    color: var(--elz-gray-400);
+  }
+  .elz-field:hover {
+    border-color: var(--elz-gray-400);
+  }
+  .elz-field:focus-visible {
+    outline: none;
+    border-color: var(--elz-green-strong);
+    box-shadow: 0 0 0 3px var(--elz-green-soft);
+  }
+  .elz-field:disabled {
+    background: var(--elz-surface-muted);
+    color: var(--elz-text-subtle);
+    cursor: not-allowed;
+  }
+  .elz-field[aria-invalid="true"] {
+    border-color: var(--elz-danger);
+  }
+
+  /* Tabela de dados */
+  .elz-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .elz-table th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--elz-text-muted);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--elz-border);
+    white-space: nowrap;
+    background: var(--elz-gray-50);
+  }
+  .elz-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--elz-border);
+    vertical-align: middle;
+  }
+  .elz-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .elz-table tbody tr:hover td {
+    background: var(--elz-gray-50);
+  }
+}
