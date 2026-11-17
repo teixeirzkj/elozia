@@ -4,6 +4,7 @@ CRM inteligente para agências de viagens. SaaS multiempresa de atendimento (Wha
 
 Leia antes de trabalhar: [docs/BRIEFING.md](docs/BRIEFING.md), [docs/ARQUITETURA.md](docs/ARQUITETURA.md), [docs/PLANO.md](docs/PLANO.md).
 Operação e estado atual: [docs/DEPLOY.md](docs/DEPLOY.md), [docs/SEGURANCA.md](docs/SEGURANCA.md), [docs/RELATORIO_MVP.md](docs/RELATORIO_MVP.md). Módulo de IA (só plano): [docs/PLANO_IA.md](docs/PLANO_IA.md).
+Atualização em andamento: Parte 2 do [docs/PLANO.md](docs/PLANO.md) (etapas 0 e A a F) e seção "Atualização planejada" da arquitetura. Referências de concorrente: só [docs/referencias/ANALISE.md](docs/referencias/ANALISE.md); as imagens têm dados pessoais de terceiros e nunca entram no repositório.
 
 ## Regras que não se negociam
 
@@ -17,6 +18,9 @@ Operação e estado atual: [docs/DEPLOY.md](docs/DEPLOY.md), [docs/SEGURANCA.md]
 8. **Português brasileiro** em toda a interface e nas mensagens de erro. Código (identificadores) em inglês; rotas em português.
 9. **Dados de exemplo são fictícios** e marcados como demonstração. Nunca dados reais de clientes.
 10. **Simplicidade.** MVP primeiro; não adicionar abstrações ou funcionalidades fora do plano sem aprovação.
+11. **Agências só pelo Master.** Não existe cadastro público de agência (a partir da Fase B). Privilégio Master vem apenas de `platform.platform_admins` com MFA (aal2) conferido no servidor e no banco; nunca de rota, `user_metadata`, parâmetro ou frontend. Master nunca é membro de agência.
+12. **Suporte auditado e somente leitura.** O Master entra numa agência só por sessão de suporte registrada no banco, presa à sessão de login, com justificativa e prazo. Dados privados exigem autorização temporária da agência. Nada de impersonação, troca de senha, sessão compartilhada ou id de agência vindo de URL, formulário ou cabeçalho.
+13. **Referências visuais não são copiadas.** Usar só a análise funcional; interface, textos e componentes são originais da Elozia.
 
 ## Stack
 
@@ -57,10 +61,17 @@ docs/
 - Em migrations novas, conceda privilégios só às tabelas criadas nelas (`grant ... on public.<tabela>`). Nunca `grant ... on all tables`: isso reabriria `whatsapp_credentials`, `webhook_events` e `jobs`, que são só do servidor.
 - Mensagens do WhatsApp saem sempre por `sendToConversation` (`src/lib/whatsapp/service.ts`), que aplica janela de 24 h, consentimento e opt-out. Não chame a Graph API direto dos módulos.
 - Os testes de banco rodam em PGlite (sem Docker). O que depende de PostgREST, Auth, Storage ou Realtime só é coberto pelo E2E em um projeto Supabase de testes.
+- Funções novas em `public`: revogar `EXECUTE` de `public` e `anon` explicitamente; liberar só a quem precisa.
+- A partir da Fase B, toda tabela nova é classificada como **administrativa** (leitura por `app.can_read_org`) ou **privada** (leitura por `app.can_read_private`). `app.is_member` nunca passa a considerar o suporte, porque aparece em regras de escrita.
+- `createAdminClient()` (ignora a RLS) só depois de `authorize(capability)` e com `organization_id` explícito; o papel "support" é recusado em toda ação que escreve.
+- Animações com `motion` respeitam `prefers-reduced-motion`; bibliotecas pesadas (`motion`, `recharts`, `@xyflow/react`) só em componentes cliente da rota que as usa.
+- Itens de menu só aparecem quando a funcionalidade existe.
 
 ## Papéis
 
 `owner` (Proprietário) · `admin` (Administrador) · `supervisor` (Supervisor) · `agent` (Atendente). Matriz em `src/lib/permissions.ts` e em docs/ARQUITETURA.md.
+
+Planejados (Fase B): papéis Master `owner`, `operator`, `viewer` em `platform.platform_admins`, e o papel efetivo `support` (só no servidor, somente leitura), que nunca entra no enum `member_role`.
 
 ## Comandos
 

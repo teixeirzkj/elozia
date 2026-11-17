@@ -158,3 +158,103 @@ Nada de timers em memória. A tabela `jobs` é a fila; um endpoint `/api/cron/ti
 - **Unitários (Vitest):** schemas, normalização de telefone, janela de 24 h, assinatura do webhook, motor de automações, permissões.
 - **Banco (Vitest + PGlite):** migrations aplicadas num Postgres embarcado com um esquema `auth` mínimo; isolamento entre agências e regras de papel em todas as tabelas.
 - **E2E (Playwright):** fluxo completo contra um projeto Supabase de testes; WhatsApp com mocks de webhook.
+
+---
+
+## Atualização planejada (16/11/2026)
+
+> Esta seção descreve o modelo **planejado** para a atualização da [Parte 2 do PLANO.md](PLANO.md). Nada abaixo está implementado. Cada item entra numa migration nova (0007 em diante); as migrations 0001–0006 nunca são editadas.
+
+### Navegação e interface
+
+- Barra superior escura no desktop, com menu principal e submenus suspensos; navegação adaptada no celular. Substitui a sidebar.
+- Configurações com menu lateral contextual (título e descrição por item).
+- Submenus mostram só funcionalidades existentes.
+- Bibliotecas novas, carregadas só em componentes cliente que as usam: `motion@14` (animações, com `prefers-reduced-motion` respeitado também em JS), `recharts@3` (gráficos), `@xyflow/react@12.12.1` (construtor de chatbot, só na rota do editor; a 13.x saiu em 16/11/2026 e fica para depois de estabilizar).
+
+### Identidade Master
+
+- Esquema `platform`, **fora da API pública** (sem grants para `anon` e `authenticated`; acesso só por funções `security definer`).
+- `platform.platform_admins(user_id, role owner|operator|viewer, status, ...)` é a **única fonte de autorização** Master. `app_metadata` serve no máximo como dica de roteamento; `user_metadata` nunca participa de autorização.
+- MFA TOTP obrigatório: o servidor confere `aal2` (`getUser` + `getAuthenticatorAssuranceLevel`) e o banco confere `auth.jwt()->>'aal'` em toda função Master. Ações sensíveis exigem TOTP recente.
+- Master **nunca** é membro de agência: gatilhos impedem vínculo nos dois sentidos. Quem atua nas duas frentes usa duas contas.
+- Primeiro Master: conta criada por script com service role e inclusão em `platform_admins` pelo SQL Editor, registrada na auditoria. Não existe "o primeiro que chamar vira Master".
+- Login: CAPTCHA nativo do Supabase Auth e hooks de tentativa de senha e de MFA (bloqueio progressivo no próprio Auth). Limites na Server Action são complemento, não a proteção principal, porque a API do Auth pode ser chamada diretamente.
+- Logout e desativação do Master encerram todas as sessões (`signOut` global).
+
+### Agências: situação, planos e limites
+
+- `organizations` ganha `status` (active|suspended), dados de suspensão, `plan_id`, `logo_path`, `created_by`, `last_activity_at` e endereço. Gatilho impede a agência de alterar campos administrativos.
+- Agência suspensa: `is_member`, `has_role` e `current_org` passam a exigir `status = 'active'` (bloqueio total no banco), assim como as funções que leem vínculos diretamente; `authorize()` recusa antes de qualquer ação com service role; o webhook continua gravando mensagens recebidas, sem automações nem envios; o agendador ignora a agência.
+- `platform.plans` (limites, sem preço) e `public.organization_limits` (exceções por agência). Limites aplicados por gatilhos em `memberships`, `invitations` e `whatsapp_channels`, que valem também para o service role.
+- Criação de agência só por `platform_create_organization`, com convite do proprietário (`created_via = 'platform'`). `create_organization` e o cadastro público deixam de existir.
+
+### Modo suporte
+
+```
+Master (aal2) ─► start_support_session(org, justificativa)   [o banco valida tudo]
+        │            └─ grava a sessão: Master, agência, session_id do login, expira em até 60 min
+        └─ cookie httpOnly assinado = id da sessão (nunca o id da agência)
+Cada requisição: cookie válido + Master aal2 + sessão ativa no banco com o mesmo session_id
+        └─ papel efetivo "support" (somente leitura)
+```
+
+- A sessão fica presa ao `session_id` do login que a iniciou: outro aparelho ou outro token do mesmo Master não herda o acesso.
+- `app.is_member` **não** considera o suporte (aparece em regras de escrita). O suporte entra por duas funções usadas só em políticas de leitura:
+  - `app.can_read_org(org)`: dados administrativos (agência, equipe, etiquetas, catálogo, etapas, canais sem credenciais, modelos, automações, campanhas);
+  - `app.can_read_private(org, escopo)`: dados privados (contatos, oportunidades, propostas, reservas, tarefas, conversas, mensagens), só com autorização ativa da agência para aquele escopo.
+- Autorização da agência (`support_grants`): concedida por proprietário ou administrador, escopo "CRM" ou "atendimento", somente leitura, prazo de até 72 h (padrão 4 h), Master nomeado, revogável a qualquer momento.
+- Mídia privada em modo suporte: só por rota do servidor que reconfere a autorização a cada requisição e registra a leitura. O suporte não recebe URLs assinadas nem leitura direta do Storage privado.
+- Auditoria: ações de plataforma em `platform.platform_audit_logs` (só inclusão; gatilhos cobrem qualquer alteração); ações dentro da agência em `audit_logs` com `support_session_id` e `master_id` carimbados por gatilho; leituras privadas em eventos da sessão. A auditoria do suporte só é gravada por funções: o Master não insere direto em `audit_logs`.
+- A agência consulta sessões, eventos e autorizações por funções que filtram a própria agência.
+- **Regra para tabelas novas:** toda tabela criada a partir da Fase B nasce classificada como administrativa ou privada, com a política de leitura correspondente.
+
+### Atendimento como entidade
+
+- Tabela de atendimentos, um por ciclo de conversa: protocolo, início, primeira resposta, conclusão, atendente, equipe, origem (canal e, quando a Meta informar, anúncio).
+- Base para o relatório geral (pendentes antes do período + novos − concluídos = pendentes depois), capacidade diária, tempo de espera, tempo de resposta e duração.
+- Equipe padrão e equipe por canal preenchem a equipe das conversas novas.
+
+### CRM
+
+- Múltiplos funis (se aprovado): `pipelines`, com `pipeline_id` em etapas e oportunidades; migração das etapas atuais para um funil padrão; `move_opportunity` valida o funil.
+- Contatos: `archived_at` (arquivados fora de campanhas e automações), `last_interaction_at`, exportação auditada.
+- Pacotes: `package_images` (várias fotos, uma de capa).
+- Motivos de perda configuráveis, mantendo o texto livre como complemento.
+
+### Envio de mensagens: consentimento por origem
+
+`sendToConversation` continua sendo o único caminho de envio. A regra passa a depender da origem (decisão D3 do plano):
+
+| Origem | Regra |
+|---|---|
+| Manual (atendente) | Janela de 24 h ou template aprovado |
+| Chatbot, em conversa iniciada pelo cliente e dentro da janela | Sem opt-out |
+| Template de utilidade a cliente com relação comercial (lembretes) | Sem opt-out |
+| Template de marketing, campanha | Consentimento registrado e sem opt-out |
+
+Horário de atendimento configurável por agência substitui a janela fixa de 8h–20h; campanhas e sequências o respeitam; o chatbot responde a qualquer hora.
+
+### Automações
+
+- Sequências: `sequences`, `sequence_steps`, `sequence_enrollments` (uma inscrição viva por entidade, ponteiro de etapa, regras de saída) e registros por etapa com chave única. Reaproveitam a fila `jobs`, as consultas de gatilho e as ações do motor atual.
+- Mensagens agendadas: `scheduled_messages` com job próprio (`run_at = scheduled_at`, chave `sched:<id>`); fora da janela de 24 h, só template.
+- Respostas rápidas: tabela única com alcance empresa, equipe ou usuário e arquivamento, exibida junto dos modelos da Meta com tipo diferenciado.
+- Campanhas: status `paused` com retomada por função; lotes com chave de deduplicação; recuperação de destinatários presos em "enviando".
+- `jobs.kind`, `messages.origin` e `messages.type` ampliados numa única migration, já prevendo sequência, agendada, chatbot e interativa.
+
+### Chatbots
+
+- Tabelas: `chatbots` (rascunho em JSON com revisão para concorrência), `chatbot_versions` (imutáveis; publicação só por função), `chatbot_sessions` (no máximo uma viva por conversa, presa à versão de início) e `chatbot_events` (chave de idempotência única, sem conteúdo de mensagens).
+- Grafo: nós são **grupos de etapas** em sequência; cada nó tem uma saída por opção ou ramo e uma saída obrigatória de "sem resposta/expirou".
+- Validação no servidor (schema estrito, validador estrutural e revalidação de cada id contra a agência) na publicação e na execução. O grafo vindo do navegador nunca é confiável.
+- Motor: roda depois da resposta do webhook (erros contidos, sem provocar reentregas da Meta), com trava por conversa, idempotência por mensagem recebida e limite de passos e de mensagens por turno; esperas e expirações viram jobs.
+- Atendimento humano: quando um atendente assume, responde ou conclui, a sessão do bot é encerrada e seus jobs cancelados.
+- WhatsApp: envio de mensagens interativas (botões até 3, lista até 10 itens) e recebimento de `button_reply`/`list_reply` como entrada de primeira classe.
+- O simulador usa o mesmo interpretador, sem efeitos reais.
+
+### Testes adicionais
+
+- `tests/db/helpers.ts` ganha `auth.jwt()` com `aal`, `amr` e `session_id`, e a criação de agências passa a usar a função do Master.
+- Testes de burla do modo suporte e da suspensão; teste que percorre todas as funções `security definer` e confere a recusa para agência suspensa; teste de que nenhuma função nova é executável por `anon`.
+- Toda tabela nova: isolamento entre agências e classificação de leitura do suporte.

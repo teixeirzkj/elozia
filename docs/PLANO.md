@@ -1,114 +1,201 @@
 # Plano de desenvolvimento — Elozia
 
-Legenda: ☐ pendente · ◐ implementado, falta validar em ambiente real · ☑ concluído
+Legenda: ☐ pendente · ◐ em andamento ou implementado sem validação real · ☑ concluído
 
-Regra geral de conclusão de qualquer fase: lint, typecheck, testes e build passam; toda tabela nova tem RLS e teste de isolamento; toda tela tem carregamento, erro e vazio; este arquivo é atualizado.
+Regra de conclusão de qualquer etapa: lint, typecheck, testes e build passam; toda tabela nova tem RLS, classificação de acesso do suporte e teste de isolamento; toda tela tem carregamento, erro e vazio; este arquivo é atualizado; a etapa seguinte só começa com aprovação.
 
-> **Situação em 16/11/2026.** O sistema está publicado em https://elozia.vercel.app, ligado ao projeto Supabase "CRM ELOZIA". As fases 1, 2 e 5 foram validadas em produção pelo teste de ponta a ponta (cadastro, convite, catálogo, contato, oportunidade, proposta, Kanban, reserva, dashboard, relatório) e pela revisão das 22 telas em desktop e celular. As fases 3 e 4 continuam ◐: **o WhatsApp não foi validado com a Meta e o agendador das automações ainda não está ativo.** As marcações ☐ dos critérios abaixo que tratam de cadastro, convite e CRUD em ambiente real estão cumpridas por essa validação. Detalhes e pendências em [RELATORIO_MVP.md](RELATORIO_MVP.md).
+---
 
-## Fase 0 — Planejamento ☑
+## Parte 1 — MVP (concluído em 16/11/2026)
 
-- ☑ CLAUDE.md, docs/BRIEFING.md, docs/ARQUITETURA.md, docs/PLANO.md
-- ☑ Modelo de dados inicial, estratégia de isolamento, serviços externos, MVP × futuro
+Publicado em https://elozia.vercel.app, ligado ao projeto Supabase "CRM ELOZIA". Detalhes em [RELATORIO_MVP.md](RELATORIO_MVP.md).
 
-## Fase 1 — Fundação ◐
+| Fase | Situação |
+|---|---|
+| 0 — Planejamento | ☑ |
+| 1 — Fundação (auth, multiempresa, papéis, convites, configurações) | ☑ validada em produção |
+| 2 — CRM (contatos, catálogo, funil Kanban, oportunidades, propostas, reservas) | ☑ validada em produção |
+| 3 — Atendimento WhatsApp | ◐ código pronto; **não validado com a Meta** |
+| 4 — Automações e campanhas | ◐ código pronto; **agendador (pg_cron) inativo** |
+| 5 — Dashboard, relatórios, auditoria, documentação | ☑ |
 
-- ☑ Projeto Next.js 16 + TypeScript estrito + Tailwind 4, ESLint, Vitest, Playwright, `.env.example`
-- ☑ Clientes Supabase (navegador, servidor, admin) e validação de ambiente
-- ☑ Migration `0001_fundacao`: organizations, profiles, memberships, invitations, teams, audit_logs + RLS
-- ☑ Login, cadastro de agência, recuperação e redefinição de senha, logout, proteção de rotas
-- ☑ Convites por link de uso único e papéis (Proprietário, Administrador, Supervisor, Atendente)
-- ☑ Design system com a marca, sidebar, header, navegação mobile
-- ☑ Configurações: agência, fuso, perfil, equipe e convites, equipes de atendimento, permissões
+---
 
-Critérios
-- ☑ Testes de banco provam que a agência A não lê nem altera dados da agência B.
-- ☑ Papel insuficiente é recusado no servidor e no banco (testes).
-- ☐ Uma agência se cadastra, convida um colaborador e ele entra com o papel definido — **falta rodar em Supabase real** (coberto pelo E2E escrito).
+## Parte 2 — Atualização completa (planejada em 16/11/2026)
 
-## Fase 2 — CRM comercial ◐
+Escopo pedido pelo dono do produto: nova navegação e design system, painel Master com criação de agências e acesso de suporte auditado, ampliação dos módulos da agência, sequências, mensagens agendadas, modelos e respostas rápidas, construtor visual de chatbots, relatórios ampliados, usuários, equipes e configurações.
 
-- ☑ Contatos: CRUD, E.164, origem, etiquetas, responsável, consentimento, histórico, busca, filtros, importação CSV
-- ☑ Catálogo: pacotes, múltiplas saídas, imagem, situação
-- ☑ Funil Kanban: etapas padrão e personalizáveis, cartões, movimentação persistente com histórico
-- ☑ Oportunidades, propostas e reservas (pagamento declarado manualmente)
-- ☑ Ficha do contato com oportunidades, reservas, tarefas e histórico
-- ☑ Dados de demonstração fictícios e identificados
+Fontes deste plano: diagnóstico do código (5 auditorias por fase, desenho de segurança do Master com 2 revisões adversariais e revisão de completude) e as referências em [referencias/ANALISE.md](referencias/ANALISE.md). Modelo técnico em [ARQUITETURA.md](ARQUITETURA.md), seção "Atualização".
 
-Critérios
-- ☑ Testes de CRUD, de movimentação do Kanban e de isolamento passam.
-- ☐ CRUDs exercitados pela interface em ambiente real.
+### Diagnóstico resumido
 
-## Fase 3 — Atendimento WhatsApp ◐
+| Área | Existe | Parcial | Ausente | Esforço |
+|---|---:|---:|---:|---|
+| A — Visual, navegação, login | 5 | 11 | 7 | grande |
+| B — Master e suporte | 0 | 2 | quase tudo | muito grande |
+| C — Dashboard, atendimento, contatos, CRM, viagens | 17 | 11 | 7 | grande |
+| D — Campanhas, sequências, agendadas, modelos | 9 | 6 | 5 | muito grande |
+| E — Construtor de chatbot e motor | 0 | 4 | 17 | muito grande |
+| F — Relatórios, usuários, equipes, configurações | 16 | 18 | 12 | muito grande |
 
-- ☑ Configurações › Canais: WABA ID, Phone Number ID, token validado na Meta e cifrado; conector preparado para Embedded Signup
-- ☑ Webhook: verificação GET, POST com HMAC sobre o corpo bruto, idempotência, roteamento por `phone_number_id`, status
-- ☑ Central de atendimento em três áreas, com Realtime
-- ☑ Texto, imagem, áudio, documento, notas internas, indicadores de envio e leitura
-- ☑ Assumir, transferir (atendente ou equipe), concluir, reabrir
-- ☑ Janela de 24 h e templates sincronizados
-- ☑ Bucket privado, uploads validados, URLs assinadas, rate limiting
-- ☑ Mocks de webhook, script de simulação local e testes
+O que já sustenta a atualização: RLS em 31 tabelas com testes de isolamento, fila persistente de jobs, envio único por `sendToConversation` (janela de 24 h, opt-out), ingestão idempotente do webhook, Kanban, campanhas por viagem, relatórios em SQL e o design system inicial.
 
-Critérios
-- ☑ Eventos duplicados ou com assinatura inválida não geram dados (testes).
-- ☑ Sem credenciais, o sistema mostra o canal como não conectado; nunca simula conexão.
-- ☐ **Validação com número real da Meta** — depende do proprietário do produto.
+Bloqueios e riscos que mudam a ordem pedida:
 
-## Fase 4 — Automações e campanhas ◐
+1. **Remover o cadastro público depende do Master.** Hoje qualquer conta autenticada pode chamar `create_organization` pela API, mesmo sem a tela (`0001_fundacao.sql:367`). Só dá para revogar quando existir a criação de agência pelo Master e o convite de proprietário. Por isso a remoção sai da Fase A e vai para a Fase B.
+2. **Não existe projeto Supabase de testes.** Toda migration das fases B a F rodaria direto em produção. A Fase B troca `app.is_member`, base de toda a RLS: um erro esconde dados de todas as agências.
+3. **A regra de consentimento bloqueia chatbot e lembretes.** Hoje toda mensagem automática exige consentimento de marketing (`service.ts:132-133`), e contatos novos nascem sem ele. Um chatbot de primeira resposta e um lembrete de pagamento seriam recusados quase sempre.
+4. **Janela fixa de envio 8h–20h** (`automations/types.ts:145`) conflita com horário de atendimento configurável e com um chatbot que responde a qualquer hora.
+5. **WhatsApp não validado e agendador inativo.** As fases D e E não podem ser validadas sem os dois. Antes de ligar o agendador há dois defeitos a corrigir: lotes de campanha sem chave de deduplicação e destinatários presos em "enviando", que podem gerar repetição infinita de lotes (`engine.ts:349`, `engine.ts:427`).
+6. **Respostas interativas do WhatsApp** (botões e listas) chegam hoje como "não suportadas" e não há envio de mensagens interativas. O construtor de chatbot precisa dos dois.
+7. **Métricas de atendimento** da referência (pendentes antes/depois, tempo de espera, duração por atendimento) exigem registrar cada atendimento como entidade própria; hoje a conversa guarda só o ciclo atual.
 
-- ☑ Fila persistente `jobs` + endpoint de cron (idempotência, concorrência, retentativas, cancelamento)
-- ☑ Regras: gatilho, condições, ações, intervalo, situação, histórico
-- ☑ Seis follow-ups: lead sem atendimento, proposta sem resposta, oportunidade parada, pagamento pendente, viagem próxima, pós-viagem
-- ☑ Ações: criar tarefa, alterar responsável, adicionar etiqueta, mover oportunidade, enviar template aprovado
-- ☑ Campanhas por viagem com segmentação, consentimento, template e agendamento
-- ☑ Opt-out, limites, horário de envio no fuso da agência, tratamento de erros da Meta
-- ☑ Telas: automações, formulário guiado, campanhas, histórico de envios
+### Ordem das etapas
 
-Critérios
-- ☑ Uma regra ativa gera exatamente uma execução por ocorrência (teste).
-- ☑ Nenhuma mensagem automática sai sem consentimento ou com opt-out (regra no servidor; público testado no banco).
-- ☐ Execução real pelo agendador da Vercel e envio real de template.
+Mantida a sequência A → F pedida, com dois ajustes: uma **Etapa 0** de pré-requisitos e a remoção do cadastro público movida da A para a B.
 
-## Fase 5 — Dashboard, relatórios e fechamento do MVP ◐
+```
+0 Pré-requisitos ─► A Visual e navegação ─► B Master e suporte ─► C Agência
+                                                                    │
+         F Finalização ◄─ E Chatbot ◄─ D Automações ◄─ (operação real validada)
+```
 
-- ☑ Dashboard com indicadores calculados de dados reais
-- ☑ Oito relatórios com filtros e exportação CSV com controle de acesso
-- ☑ Auditoria de segurança com seis correções ([SEGURANCA.md](SEGURANCA.md))
-- ☑ Teste E2E do fluxo completo escrito; testes de navegador das telas públicas executados
-- ☑ Documentação de deploy, variáveis, checklists Supabase e Meta, cabeçalhos, monitoramento, backup ([DEPLOY.md](DEPLOY.md))
-- ☑ [RELATORIO_MVP.md](RELATORIO_MVP.md)
-- ☐ Revisão manual de usabilidade das telas autenticadas em desktop, tablet e celular (exige ambiente real)
-- ☐ Execução do E2E completo em projeto de testes
+---
 
-## Próximos passos (do proprietário do produto)
+### Etapa 0 — Pré-requisitos de operação ☐
 
-1. No Supabase, em Authentication › URL Configuration: Site URL `https://elozia.vercel.app` e Redirect URL `https://elozia.vercel.app/auth/confirm`.
-2. Ativar o agendador: `node scripts/setup-cron.mjs https://elozia.vercel.app`.
-3. Configurar SMTP próprio, Upstash e, se desejado, domínio próprio.
-4. Conectar um número real e validar o WhatsApp.
-5. Criar um projeto Supabase separado para testes e iniciar o piloto com uma agência.
+Sem funcionalidade nova. Depende do dono do produto nos itens marcados (D).
 
-## Futuro — fora do MVP
+- ☐ (D) Criar um **segundo projeto Supabase só para testes**; aplicar as migrations e apontar o E2E para ele.
+- ☐ (D) Supabase Auth: Site URL e Redirect URLs de produção.
+- ☐ (D) SMTP próprio no Supabase Auth (exigido pelo convite do proprietário e pela recuperação de senha).
+- ☐ (D) Upstash Redis em produção (rate limiting entre instâncias).
+- ☐ Rotina de backup antes de cada migration em produção (`supabase db dump` documentado).
+- ☐ Decisões da seção "Decisões do produto" registradas neste arquivo.
 
-### Fase 6 — Agente de IA ☐ (planejado, não implementado)
+Critério: o E2E completo roda no projeto de testes, não no de produção.
 
-Plano técnico, componentes e modelo de custos em [PLANO_IA.md](PLANO_IA.md). **Só começa depois de o CRM e o WhatsApp estarem validados com a agência piloto e de aprovação explícita do plano.**
+### Fase A — Fundação visual e navegação ☐
 
-### Demais itens
+Não altera o banco. Não remove o cadastro público (vai para a Fase B).
 
-- Integração com n8n (webhooks de saída e API).
-- Cobrança recorrente das agências.
-- Embedded Signup da Meta.
-- Gateway de pagamento e integrações com fornecedores.
-- LGPD: exportação de dados do titular e exclusão completa de agência.
-- Segundo fator de autenticação.
+- ☐ Tokens completos: escala de verdes, status de negócio (lead, proposta, ganho, perdido), estados (hover, ativo, desabilitado, foco), tipografia e espaçamento. Substituir os ~169 valores arbitrários e hex soltos.
+- ☐ Componentes base: Drawer/painel lateral, DropdownMenu, PasswordField (mostrar/ocultar), Tooltip, Breadcrumbs, tabela que vira cartões no celular, skeletons por página, toasts e modais animados.
+- ☐ Motion (`motion@14`) só em menus, drawers, modais, Kanban e transições, respeitando `prefers-reduced-motion` também no JavaScript; carregado apenas em componentes cliente.
+- ☐ **Barra superior escura** no desktop com menu principal (Dashboard, Atendimentos, CRM, Viagens, Campanhas, Automações, Relatórios, Configurações), submenus suspensos, indicador ativo, progresso de navegação; navegação adaptada no celular.
+- ☐ Submenus mostram **apenas o que existe** (sem itens "em breve"): CRM › Contatos, Funil, Oportunidades, Tarefas; Configurações com menu lateral contextual (título + descrição por item).
+- ☐ Novas listas simples sobre dados existentes: Oportunidades (lista, além do Kanban) e Tarefas (global).
+- ☐ Login renovado: mostrar/ocultar senha, layout novo, mensagens de erro e loading.
+- ☐ Central de atendimento ajustada à nova altura do cabeçalho.
+- ☐ Revisão visual das 22 telas em desktop, tablet e celular; E2E atualizado para a nova navegação.
 
-## Decisões em aberto (do proprietário do produto)
+Critério: todas as telas atuais funcionam na nova navegação, sem regressão no E2E, em três larguras.
 
-- Planos e preços da assinatura.
-- Provedor de e-mail transacional.
-- Plano da Vercel (cron por minuto exige Pro) ou uso de `pg_cron` no Supabase.
-- Modo de operação na Meta: aplicativo de cada agência ou aplicativo único da Elozia (Tech Provider).
-- Textos jurídicos: Termos de Uso e Política de Privacidade.
-- Provedor e modelos do agente de IA.
+### Fase B — Administração Master e acesso de suporte ☐
+
+Inclui as correções das revisões de segurança. Detalhes técnicos em ARQUITETURA.md.
+
+**B1 — Base de segurança**
+- ☐ Esquema `platform` (fora da API pública): administradores Master (papéis owner, operator, viewer), MFA TOTP obrigatório (aal2 conferido no servidor e no banco).
+- ☐ Provisionamento do primeiro Master por procedimento administrativo documentado (script com service role + SQL), nunca por cadastro.
+- ☐ Master **nunca** é membro de agência (gatilhos nos dois sentidos).
+- ☐ `organizations.status` (ativa/suspensa); `is_member`, `has_role`, `current_org` e as funções que leem vínculos diretamente passam a exigir agência ativa; `authorize()` recusa agência suspensa antes de qualquer ação com service role.
+- ☐ Campos administrativos da agência (situação, plano, razão social, CNPJ) protegidos contra alteração pela própria agência.
+- ☐ Planos e limites sem preço (`platform.plans` + exceções por agência), aplicados por gatilhos no banco (usuários, convites, canais) e antecipados na interface ("N de N usuários").
+- ☐ Auditoria de plataforma só de inclusão, com gatilhos que registram qualquer alteração em agências, planos, limites e Masters.
+- ☐ Proteção de login no próprio Supabase Auth: CAPTCHA nativo e hook de tentativas de senha e MFA (o limite na Server Action pode ser contornado pela API do Auth).
+- ☐ Revogar `EXECUTE` padrão de funções novas para `anon`; teste que confere isso.
+
+**B2 — Painel Master e fim do cadastro público**
+- ☐ `/master/entrar` e área `/master` com layout próprio: visão geral (indicadores reais e gráficos), agências (tabela, filtros, painel lateral, criar, editar, suspender, reativar, plano e limites), usuários administrativos, planos e limites, consumo, auditoria, configurações da plataforma.
+- ☐ Criação de agência pelo Master com convite do administrador inicial.
+- ☐ Aceite de convite reescrito sem `auth.signUp` público; tela "sem acesso / agência suspensa" no lugar de `/boas-vindas`.
+- ☐ Remover `/cadastro`, `/boas-vindas`, `signUpAction` e `create_organization`; desligar o cadastro aberto no Supabase Auth.
+- ☐ Testes de banco e E2E reescritos ("Master cria agência e convida o proprietário").
+
+**B3 — Acesso como suporte**
+- ☐ Sessão de suporte no banco: justificativa, prazo (até 60 min, inatividade de 15 min), presa à **sessão de login** que a iniciou, TOTP recente para iniciar.
+- ☐ Cookie httpOnly assinado com o id da sessão (nunca o id da agência); banco como fonte da verdade a cada requisição.
+- ☐ Papel efetivo "suporte" **somente leitura**; escrita futura só por funções específicas e auditadas.
+- ☐ Leitura administrativa (cadastros, configurações) liberada na sessão; **dados privados** (contatos, oportunidades, conversas, mensagens, mídia) só com autorização temporária da agência, com escopo, prazo, Master nomeado e revogação.
+- ☐ Mídia privada em modo suporte servida por rota que reconfere a autorização e registra a leitura (sem URLs assinadas).
+- ☐ Banner "Modo suporte Elozia", "Voltar ao Master", encerramento por prazo também pelo agendador.
+- ☐ Tela da agência para autorizar, revogar e consultar o histórico de acessos do suporte.
+- ☐ Testes de tentativa de burla: sem sessão, sessão expirada, de outra agência, de outro aparelho, autorização revogada, cookie forjado, Master rebaixado, agência suspensa.
+
+Critério: nenhuma conta comum cria agência por nenhum caminho; o suporte só lê o que a agência autorizou, enquanto autorizou, com tudo registrado.
+
+### Fase C — Sistema da agência ☐
+
+- ☐ **Entidade atendimento** (um por ciclo de conversa): protocolo, início, primeira resposta, conclusão, atendente, equipe, origem.
+- ☐ Equipe padrão e equipe por canal (conversas novas entram com equipe).
+- ☐ Dashboard com gráficos (biblioteca única, `recharts@3`): atendimentos por período, evolução comercial, conversão, desempenho de atendentes (só gestores), vendas por viagem, etapas do funil; filtro de datas livre.
+- ☐ Central: etiquetas na lista, observações e etiquetas no painel, criar oportunidade sem sair da conversa, modelos e respostas rápidas no compositor.
+- ☐ Contatos: última interação, exportar (com permissão e auditoria), arquivar, detalhes em painel lateral (a página `/contatos/[id]` continua existindo).
+- ☐ Funil: cartões com próximas atividades; motivos de perda configuráveis.
+- ☐ **Múltiplos funis** (se aprovado): migração ensaiada no projeto de testes antes da produção.
+- ☐ Viagens: várias fotos, visão tabela e cartões, página do pacote com oportunidades, reservas e campanhas relacionadas.
+
+### Etapa de operação real (entre C e D) ☐
+
+- ☐ Corrigir lotes de campanha sem deduplicação e destinatários presos em "enviando".
+- ☐ Revisar o que está agendado em produção e ativar o agendador (`scripts/setup-cron.mjs`).
+- ☐ Validar o WhatsApp com número real (receber, responder, mídia, template fora da janela, status).
+
+### Fase D — Automações ☐
+
+- ☐ Regra de consentimento por origem (ver decisão D3) aplicada em `sendToConversation`.
+- ☐ Horário de atendimento configurável, substituindo a janela fixa de 8h–20h (decisão D4).
+- ☐ Campanhas: pausa e retomada, busca e filtros, segmentação ampliada.
+- ☐ **Sequências** de várias etapas com inscrição única, regras de saída e anti-duplicidade entre sequências (decisão D5 sobre as automações atuais).
+- ☐ **Mensagens agendadas**: lista, agendar, cancelar, detalhes; aviso quando a janela de 24 h exigir template.
+- ☐ **Modelos e respostas rápidas** numa tela única, tipos diferenciados, alcance (empresa, equipe, usuário), arquivamento; status de modelo sempre vindo da Meta.
+
+### Fase E — Construtor visual de chatbots ☐
+
+- ☐ Envio e recebimento de mensagens interativas (botões e listas) no WhatsApp.
+- ☐ Modelo versionado: chatbot, versões imutáveis, sessão por conversa, eventos com chave de idempotência.
+- ☐ Nós como **grupos de etapas** (referência), uma saída por opção e saída obrigatória de "sem resposta/expirou".
+- ☐ Editor (`@xyflow/react@12.12.1`, carregado só na rota do construtor): biblioteca de blocos, canvas, painel de configuração, desfazer/refazer, copiar, duplicar, rascunho, alterações não salvas, histórico de versões, modos visualizar e editar.
+- ☐ Validação no servidor antes de publicar (início, conexões, saídas, incompletos, inalcançáveis, ciclos sem espera, limites do canal, ids revalidados contra a agência).
+- ☐ Simulador sem envio real, com o mesmo interpretador do motor.
+- ☐ Motor fora do caminho de erro do webhook, com trava por conversa, limite de passos por turno, pausa automática quando um atendente assume ou responde.
+- ☐ Listagem com filtros (rascunhos, publicados, pausados, arquivados).
+- ☐ Bloco IA: oculto até a Fase de IA ([PLANO_IA.md](PLANO_IA.md)).
+
+### Fase F — Finalização ☐
+
+- ☐ Relatórios: atendimentos (lista com protocolo e relatório geral com pendentes antes/depois e capacidade diária), atendentes, equipes, conversões, vendas, viagens, campanhas, chatbots, sequências; tempo de espera, de resposta e duração com o critério descrito na tela; exportação.
+- ☐ Usuários: telefone, apelido de atendimento, equipes, disponibilidade, painel lateral, limite do plano.
+- ☐ Equipes: lista com equipe padrão e filtro por canal.
+- ☐ Configurações: endereço, horário de atendimento, notificações, preferências.
+- ☐ Itens invasivos, se aprovados: permissões granulares, sessões e dispositivos, distribuição automática, notificações in-app.
+- ☐ Revisão final de responsividade, acessibilidade, animações e auditoria de segurança.
+
+---
+
+## Decisões do produto
+
+Cada item tem uma recomendação. Sem resposta, sigo a recomendação ao chegar na etapa correspondente.
+
+| # | Decisão | Recomendação | Afeta |
+|---|---|---|---|
+| D1 | Remover o cadastro público só na Fase B (depende da criação pelo Master) | Sim | A, B |
+| D2 | Segundo projeto Supabase para testes antes de qualquer migration nova | Sim, obrigatório | B em diante |
+| D3 | Consentimento por origem | Dentro da janela de 24 h, em conversa iniciada pelo cliente (chatbot, resposta), e templates de **utilidade** para cliente com relação comercial: basta não ter opt-out. Templates de **marketing** e campanhas: exigem consentimento registrado. | D, E |
+| D4 | Janela fixa 8h–20h | Substituir por horário de atendimento configurável por agência; campanhas e sequências respeitam; chatbot responde a qualquer hora | D, E |
+| D5 | Sequências × automações atuais | Sequências substituem a tela de automações; cada automação existente vira sequência de 1 etapa, migrada sem perder histórico | D |
+| D6 | Múltiplos funis por agência | Sim, mas por último na Fase C (mudança mais invasiva) | C |
+| D7 | Painel Master em origem separada | `master.<domínio-próprio>` quando houver domínio; até lá, mesma origem com CSP por nonce e sem cliente Supabase no navegador em modo suporte | B |
+| D8 | Itens de menu ainda não construídos | Ocultos até existirem (regra: nada de botão sem função) | A |
+| D9 | Papéis | Manter os 4 papéis fixos; permissões granulares só na Fase F, se aprovadas | B, F |
+| D10 | Autorização de suporte da agência | Escopos "CRM" e "atendimento", somente leitura, até 72 h (padrão 4 h), Master nomeado | B |
+| D11 | Quem vê gráficos de desempenho de atendentes | Só gestores; atendente vê os próprios números | C |
+| D12 | "Faturamento registrado" | Soma das reservas confirmadas em reais; outras moedas informadas à parte | C |
+
+Pendências antigas que continuam valendo: planos e preços, textos jurídicos, provedor de e-mail, plano da Vercel, modo de operação na Meta.
+
+## Futuro — fora desta atualização
+
+- Agente de IA ([PLANO_IA.md](PLANO_IA.md)), integração com n8n, cobrança recorrente, Embedded Signup da Meta, canais além do WhatsApp, gateway de pagamento.
+- Itens da referência deliberadamente excluídos: portal de parceiros, revenda, white-label.
