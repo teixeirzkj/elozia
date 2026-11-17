@@ -4,14 +4,24 @@ Data: 16/11/2026. Estado do código: fases 1 a 5 implementadas; módulo de IA ap
 
 ## Leia isto primeiro
 
-**O sistema ainda não rodou contra um Supabase real nem contra a Meta.** A máquina de desenvolvimento não tinha Docker, projeto Supabase nem credenciais da Meta. O que foi verificado:
+**O sistema está publicado em https://elozia.vercel.app, ligado ao projeto Supabase "CRM ELOZIA", e o fluxo principal foi validado em produção. O WhatsApp ainda não foi validado com a Meta.**
 
-- as regras do banco (isolamento, permissões, funções, relatórios) em um Postgres embarcado, com as migrations reais;
-- a lógica do servidor em testes unitários, com a rede da Meta simulada;
-- o build de produção, o lint e a checagem de tipos;
-- as telas públicas (login, cadastro, recuperação) em navegador real, em desktop e celular.
+Validado no ambiente real (16/11/2026):
 
-O que **não** foi verificado: as telas autenticadas em funcionamento (dashboard, contatos, funil, atendimento, automações, relatórios), o login de verdade, o Realtime, o Storage e qualquer chamada real à Meta. O código compila e segue a API documentada, mas a primeira execução com serviços reais pode revelar ajustes. O teste de ponta a ponta que cobre esse caminho está escrito e pronto para rodar (`tests/e2e/fluxo-completo.spec.ts`).
+- as seis migrations aplicadas no Supabase: 31 tabelas, todas com RLS;
+- o fluxo completo em navegador, contra a produção: login, criação da agência, convite aceito por um atendente com as restrições do papel, pacote com saída, contato, oportunidade, proposta, tarefa, movimentação no Kanban, reserva, dashboard e relatório com os valores corretos, exportação CSV;
+- as 22 telas autenticadas, em desktop e celular, com dados de demonstração: sem erro de carregamento, sem erro de console e sem estouro de layout (dois estouros encontrados e corrigidos);
+- saúde da aplicação, cabeçalhos de segurança e recusa de chamadas sem credencial ao webhook, ao agendador e à exportação.
+
+Os dados de teste criados nessas execuções foram removidos; o banco ficou sem agências e sem usuários.
+
+**Ainda não verificado em ambiente real:**
+
+- qualquer chamada à Meta: conexão de canal, recebimento de webhook real, envio de mensagens, templates, mídias;
+- Realtime da central de atendimento e upload de arquivos (imagem de pacote, anexos), que dependem de uso com canal conectado ou não foram exercitados;
+- e-mails reais: confirmação de cadastro e recuperação de senha (os testes criaram contas já confirmadas para não disparar e-mails a endereços fictícios);
+- automações e campanhas executadas pelo agendador em produção — **o agendador ainda não está ativo** (ver Pendências);
+- importação de CSV e os formulários de automação e campanha além do carregamento da tela.
 
 ## O que está implementado
 
@@ -45,7 +55,8 @@ Resultado da última execução (16/11/2026):
 | `npm run typecheck` | Sem erros |
 | `npm test` | 197 testes passando (105 de banco, 92 unitários) |
 | `npm run build` | Build de produção concluído |
-| `npm run test:e2e` | 14 passando (telas públicas, desktop e celular); 12 pulados (fluxo completo, exige Supabase de testes) |
+| `npm run test:e2e` contra a produção | 13 passando no perfil desktop: 7 de telas públicas e as 6 etapas do fluxo completo |
+| Revisão das telas autenticadas | 22 telas × 2 tamanhos, sem erros nem estouro de layout |
 | `npm audit --omit=dev` | 0 vulnerabilidades |
 
 **Testes de banco** (migrations reais em Postgres embarcado):
@@ -67,18 +78,19 @@ Resultado da última execução (16/11/2026):
 
 | Serviço | Necessário para | Situação |
 |---|---|---|
-| Supabase (produção e testes) | Tudo | **Não configurado.** Migrations prontas |
-| Vercel | Hospedagem e cron | **Não configurado.** `vercel.json` pronto; cron por minuto exige plano Pro (alternativa com `pg_cron` documentada) |
+| Supabase | Tudo | **Configurado**: projeto "CRM ELOZIA" com as migrations aplicadas. É o único projeto; não há um separado para testes. Falta ajustar as URLs de autenticação (ver Pendências) |
+| Vercel | Hospedagem | **Publicado** em https://elozia.vercel.app (time `teixeira`, plano Hobby). O deploy foi feito pela linha de comando; o repositório do GitHub ainda não está conectado para deploy automático |
+| Agendador | Automações e campanhas | **Não ativo.** O plano Hobby não permite cron por minuto; o script `scripts/setup-cron.mjs` agenda pelo `pg_cron` do Supabase e aguarda autorização para ser executado |
 | Meta (aplicativo, WABA, número, token) | WhatsApp | **Não validado com número real** |
-| SMTP no Supabase Auth | E-mails de confirmação e recuperação | Não configurado |
+| SMTP no Supabase Auth | E-mails de confirmação e recuperação | Não configurado: vale o serviço padrão do Supabase, limitado a poucos e-mails por hora |
 | Upstash Redis | Rate limiting entre instâncias | Não configurado (sem ele, o limite é por instância) |
-| Domínio | URL pública e webhook | Não configurado |
+| Domínio próprio | URL definitiva e webhook | Não configurado; em uso o endereço `elozia.vercel.app` |
 
 Passo a passo em [DEPLOY.md](DEPLOY.md).
 
 ## Problemas conhecidos e limitações
 
-1. **Nada foi executado contra Supabase e Meta reais** (ver o início deste relatório). Em especial, as consultas com relacionamentos aninhados e filtros em tabelas relacionadas precisam ser exercitadas no ambiente real.
+1. **WhatsApp, Realtime, uploads e e-mails ainda não foram exercitados em ambiente real** (ver o início deste relatório). As consultas da central de atendimento, com filtros em tabelas relacionadas, só foram executadas com a central vazia.
 2. **Convites**: o sistema gera o link e o administrador o envia; não há envio automático de e-mail de convite.
 3. **Uma agência por usuário**: quem já tem conta em uma agência não pode ser convidado para outra.
 4. **Áudio**: é possível anexar arquivos de áudio; não há gravação pelo navegador.
@@ -93,11 +105,16 @@ Passo a passo em [DEPLOY.md](DEPLOY.md).
 
 ## Pendências para o lançamento
 
-- [ ] Criar os projetos Supabase, aplicar as migrations e configurar Auth e SMTP.
-- [ ] Deploy na Vercel com as variáveis e o agendador.
-- [ ] Rodar o fluxo completo E2E no projeto de testes e corrigir o que aparecer.
+- [x] Criar o projeto Supabase e aplicar as migrations.
+- [x] Deploy na Vercel com as variáveis.
+- [x] Rodar o fluxo completo E2E e revisar as telas autenticadas em desktop e celular.
+- [ ] **Supabase › Authentication › URL Configuration**: definir Site URL como `https://elozia.vercel.app` e adicionar `https://elozia.vercel.app/auth/confirm` em Redirect URLs. Sem isso, os links dos e-mails de confirmação e de recuperação apontam para `localhost` e o cadastro pela tela não se completa.
+- [ ] Ativar o agendador: `node scripts/setup-cron.mjs https://elozia.vercel.app`.
+- [ ] Configurar SMTP próprio no Supabase e testar cadastro e recuperação de senha com um e-mail real.
+- [ ] Criar um segundo projeto Supabase só para testes antes de haver dados de clientes.
+- [ ] Conectar o repositório do GitHub ao projeto da Vercel para deploy automático.
 - [ ] Validar o WhatsApp com número real: receber, responder, mídia, template fora da janela, status, automação e uma campanha pequena.
-- [ ] Revisar manualmente todas as telas autenticadas em desktop, tablet e celular.
+- [ ] Revisão manual das telas em tablet e dos formulários de automação, campanha e importação.
 - [ ] Termos de Uso, Política de Privacidade e contrato de tratamento de dados.
 - [ ] Exportação de dados do titular e exclusão completa de agência (LGPD).
 - [ ] Definir planos e preços; a cobrança recorrente não está implementada.

@@ -26,8 +26,7 @@ Na Vercel, cadastre as variáveis em **Production** (e em Preview apontando para
 ## 2. Checklist do Supabase
 
 - [ ] Criar o projeto (região São Paulo, `sa-east-1`, para menor latência e dados no Brasil).
-- [ ] Aplicar as migrations **na ordem**, pelo SQL Editor ou pela CLI (`supabase link` + `supabase db push`):
-  `0001_fundacao` → `0002_crm` → `0003_whatsapp` → `0004_automacoes` → `0005_relatorios` → `0006_endurecimento`.
+- [ ] Aplicar as migrations **na ordem** (`0001_fundacao` → `0002_crm` → `0003_whatsapp` → `0004_automacoes` → `0005_relatorios` → `0006_endurecimento`). Com `SUPABASE_DB_URL` no `.env.local` (Connect › Session pooler), use `node scripts/migrate.mjs`: ele aplica o que falta, cada arquivo em uma transação, e registra em `app.schema_migrations`. `node scripts/check-env.mjs` confere o `.env.local` sem exibir valores, e `node scripts/vercel-env.mjs` envia as variáveis para a Vercel.
 - [ ] Conferir em *Database › Tables* que **todas** as tabelas mostram RLS ativada.
 - [ ] *Storage*: confirmar que o bucket `media` existe e é **privado**.
 - [ ] *Authentication › URL Configuration*: `Site URL` = `NEXT_PUBLIC_SITE_URL`; em *Redirect URLs*, adicionar `https://SEU_DOMINIO/auth/confirm`.
@@ -51,7 +50,15 @@ where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;
 - [ ] Node.js 22 ou superior nas configurações do projeto.
 - [ ] Cadastrar as variáveis da seção 1 e fazer o deploy.
 - [ ] Configurar o domínio próprio e atualizar `NEXT_PUBLIC_SITE_URL` e as URLs do Supabase Auth.
-- [ ] **Cron**: o arquivo `vercel.json` agenda `/api/cron/tick` a cada minuto. Frequência por minuto exige plano **Pro**; no plano Hobby o cron roda no máximo uma vez por dia e as automações ficariam atrasadas. Alternativa sem depender do plano: usar `pg_cron` + `pg_net` no Supabase para chamar o mesmo endereço a cada minuto:
+- [ ] **Agendador**: as automações e campanhas dependem de `/api/cron/tick` ser chamado a cada minuto. O cron da Vercel só permite essa frequência no plano **Pro**, por isso o projeto usa `pg_cron` + `pg_net` no Supabase. O script faz tudo (e guarda o `CRON_SECRET` na definição do job, dentro do banco):
+
+```
+node scripts/setup-cron.mjs https://SEU_DOMINIO     # agenda ou atualiza
+node scripts/setup-cron.mjs --status                 # últimas respostas
+node scripts/setup-cron.mjs --remove                 # remove
+```
+
+  O equivalente manual, no SQL Editor:
 
 ```sql
 select cron.schedule('elozia-tick', '* * * * *', $$

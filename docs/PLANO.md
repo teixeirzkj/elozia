@@ -4,7 +4,7 @@ Legenda: ☐ pendente · ◐ implementado, falta validar em ambiente real · ☑
 
 Regra geral de conclusão de qualquer fase: lint, typecheck, testes e build passam; toda tabela nova tem RLS e teste de isolamento; toda tela tem carregamento, erro e vazio; este arquivo é atualizado.
 
-> **Situação em 16/11/2026.** As fases 1 a 5 estão implementadas e passam em lint, typecheck, 197 testes automatizados e build. Elas estão marcadas como ◐ porque **ainda não foram executadas contra um projeto Supabase real nem contra a Meta** — a máquina de desenvolvimento não tinha esses serviços. Os critérios de conclusão que dependem de uso real (uma agência se cadastrar de verdade, receber uma mensagem de verdade) só podem ser dados como cumpridos depois dessa validação. Detalhes em [RELATORIO_MVP.md](RELATORIO_MVP.md).
+> **Situação em 16/11/2026.** O sistema está publicado em https://elozia.vercel.app, ligado ao projeto Supabase "CRM ELOZIA". As fases 1, 2 e 5 foram validadas em produção pelo teste de ponta a ponta (cadastro, convite, catálogo, contato, oportunidade, proposta, Kanban, reserva, dashboard, relatório) e pela revisão das 22 telas em desktop e celular. As fases 3 e 4 continuam ◐: **o WhatsApp não foi validado com a Meta e o agendador das automações ainda não está ativo.** As marcações ☐ dos critérios abaixo que tratam de cadastro, convite e CRUD em ambiente real estão cumpridas por essa validação. Detalhes e pendências em [RELATORIO_MVP.md](RELATORIO_MVP.md).
 
 ## Fase 0 — Planejamento ☑
 
@@ -83,11 +83,11 @@ Critérios
 
 ## Próximos passos (do proprietário do produto)
 
-1. Criar os projetos Supabase (testes e produção) e aplicar as migrations.
-2. Fazer o deploy na Vercel e configurar variáveis, domínio, SMTP e Upstash.
-3. Rodar `npm run test:e2e` com `E2E_ENABLED=1` no projeto de testes.
+1. No Supabase, em Authentication › URL Configuration: Site URL `https://elozia.vercel.app` e Redirect URL `https://elozia.vercel.app/auth/confirm`.
+2. Ativar o agendador: `node scripts/setup-cron.mjs https://elozia.vercel.app`.
+3. Configurar SMTP próprio, Upstash e, se desejado, domínio próprio.
 4. Conectar um número real e validar o WhatsApp.
-5. Revisar as telas e iniciar o piloto com uma agência.
+5. Criar um projeto Supabase separado para testes e iniciar o piloto com uma agência.
 
 ## Futuro — fora do MVP
 
