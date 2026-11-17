@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
-import { ActionForm, SubmitButton, TextField } from "@/components/ui/form";
+import { ActionForm, PasswordField, SubmitButton, TextField } from "@/components/ui/form";
 import { signInAction } from "@/modules/auth/actions";
 import { safeNextPath } from "@/modules/auth/schemas";
+import { AuthFooter, AuthHeading, AuthLink } from "../_components/auth-ui";
 
 export const metadata: Metadata = { title: "Entrar" };
 
@@ -11,8 +11,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
   const { proximo, erro } = await searchParams;
   return (
     <>
-      <h1 className="text-xl font-bold tracking-tight">Entrar</h1>
-      <p className="mt-1 mb-5 text-sm text-fg-muted">Acesse o painel da sua agência.</p>
+      <AuthHeading title="Entrar">Acesse o painel da sua agência.</AuthHeading>
       {erro === "link-invalido" ? (
         <Alert tone="warning" className="mb-4">
           O link usado é inválido ou expirou. Entre com sua senha ou solicite um novo link.
@@ -21,17 +20,22 @@ export default async function EntrarPage({ searchParams }: { searchParams: Promi
       <ActionForm action={signInAction}>
         <input type="hidden" name="proximo" value={safeNextPath(proximo)} />
         <TextField name="email" label="E-mail" type="email" autoComplete="email" inputMode="email" required />
-        <TextField name="password" label="Senha" type="password" autoComplete="current-password" required />
-        <SubmitButton className="w-full">Entrar</SubmitButton>
+        <div>
+          <PasswordField name="password" label="Senha" autoComplete="current-password" required />
+          <div className="flex justify-end">
+            <AuthLink href="/recuperar-senha" className="text-label">
+              Esqueci minha senha
+            </AuthLink>
+          </div>
+        </div>
+        <SubmitButton className="min-h-touch w-full">Entrar</SubmitButton>
       </ActionForm>
-      <div className="mt-5 flex flex-wrap justify-between gap-2 text-sm">
-        <Link href="/recuperar-senha" className="font-semibold text-brand-strong hover:underline">
-          Esqueci minha senha
-        </Link>
-        <Link href="/cadastro" className="font-semibold text-brand-strong hover:underline">
-          Cadastrar minha agência
-        </Link>
-      </div>
+      <AuthFooter>
+        <p className="flex flex-wrap items-center gap-x-1.5">
+          Ainda não usa a Elozia?
+          <AuthLink href="/cadastro">Cadastrar minha agência</AuthLink>
+        </p>
+      </AuthFooter>
     </>
   );
 }

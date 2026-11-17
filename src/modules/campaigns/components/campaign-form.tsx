@@ -27,7 +27,7 @@ function FieldError({ name }: { name: string }) {
   const { state } = useFormState();
   const message = state.fieldErrors?.[name]?.[0];
   return message ? (
-    <p className="text-[13px] text-danger" role="alert">
+    <p className="text-label text-danger" role="alert">
       {message}
     </p>
   ) : null;
@@ -98,7 +98,7 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
         <CardHeader title="Viagem" description="A campanha é sempre ligada a um pacote do catálogo." />
         <CardBody className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="camp-name" className="block text-[13px] font-semibold">
+            <label htmlFor="camp-name" className="block text-label font-semibold">
               Nome da campanha
             </label>
             <input id="camp-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required className="elz-field" />
@@ -106,7 +106,7 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="camp-package" className="block text-[13px] font-semibold">
+              <label htmlFor="camp-package" className="block text-label font-semibold">
                 Pacote
               </label>
               <select
@@ -126,7 +126,7 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
               </select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="camp-departure" className="block text-[13px] font-semibold">
+              <label htmlFor="camp-departure" className="block text-label font-semibold">
                 Saída (opcional)
               </label>
               <select id="camp-departure" value={departureId} onChange={(e) => setDepartureId(e.target.value)} className="elz-field">
@@ -146,20 +146,20 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
         <CardHeader title="Público" description="Só entram contatos com consentimento registrado, telefone e sem pedido de descadastro." />
         <CardBody className="space-y-4">
           <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-            <input type="checkbox" checked={interest} onChange={(e) => setInterest(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--elz-green-strong)]" />
+            <input type="checkbox" checked={interest} onChange={(e) => setInterest(e.target.checked)} className="mt-0.5 h-4 w-4" />
             <span>
               <strong>Demonstraram interesse neste pacote</strong>
-              <span className="block text-[13px] text-fg-muted">Contatos com oportunidade ligada ao pacote, em qualquer etapa.</span>
+              <span className="block text-label text-fg-muted">Contatos com oportunidade ligada ao pacote, em qualquer etapa.</span>
             </span>
           </label>
           {tags.length > 0 ? (
             <fieldset>
-              <legend className="mb-1.5 text-[13px] font-semibold">Com alguma destas etiquetas</legend>
+              <legend className="mb-1.5 text-label font-semibold">Com alguma destas etiquetas</legend>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <label
                     key={tag.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border border-line px-3 py-1.5 text-[13px] has-[:checked]:border-ink has-[:checked]:bg-muted"
+                    className="flex cursor-pointer items-center gap-2 rounded-full border border-line px-3 py-1.5 text-label has-[:checked]:border-ink has-[:checked]:bg-muted"
                   >
                     <input
                       type="checkbox"
@@ -172,7 +172,7 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
                   </label>
                 ))}
               </div>
-              {interest && tagIds.length > 0 ? <p className="mt-1.5 text-[13px] text-fg-subtle">Com os dois critérios, o contato precisa atender a ambos.</p> : null}
+              {interest && tagIds.length > 0 ? <p className="mt-1.5 text-label text-fg-subtle">Com os dois critérios, o contato precisa atender a ambos.</p> : null}
             </fieldset>
           ) : null}
           <FieldError name="audience_interest" />
@@ -198,7 +198,7 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
         <CardHeader title="Mensagem" description="Somente templates aprovados pela Meta podem ser usados em campanhas." />
         <CardBody className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="camp-template" className="block text-[13px] font-semibold">
+            <label htmlFor="camp-template" className="block text-label font-semibold">
               Template
             </label>
             <select
@@ -226,13 +226,13 @@ export function CampaignForm({ campaign, packages, tags, templates, timeZone, in
         <CardBody className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="camp-date" className="block text-[13px] font-semibold">
+              <label htmlFor="camp-date" className="block text-label font-semibold">
                 Data
               </label>
               <input id="camp-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="elz-field" />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="camp-time" className="block text-[13px] font-semibold">
+              <label htmlFor="camp-time" className="block text-label font-semibold">
                 Horário
               </label>
               <input id="camp-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="elz-field" />

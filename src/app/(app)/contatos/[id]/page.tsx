@@ -1,7 +1,7 @@
-import { ArrowLeft, History, Kanban, Mail, MessagesSquare, Phone, Trash2 } from "lucide-react";
+import { History, Kanban, Mail, MessagesSquare, Phone, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { LinkButton } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/dialog";
 import { Badge, Card, CardBody, CardHeader, EmptyState, TagChip } from "@/components/ui/primitives";
@@ -40,7 +40,14 @@ export default async function ContatoPage({ params }: { params: Promise<{ id: st
     listTasks(supabase, orgId, { contactId: id }),
     listStages(supabase, orgId),
     listPackageOptions(supabase, orgId),
-    supabase.from("conversations").select("id").eq("organization_id", orgId).eq("contact_id", id).order("last_message_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase
+      .from("conversations")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("contact_id", id)
+      .order("last_message_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   const ownerName = contact.owner_id ? members.find((m) => m.id === contact.owner_id)?.name : null;
   const option = { id: contact.id, name: contact.name };
@@ -48,13 +55,10 @@ export default async function ContatoPage({ params }: { params: Promise<{ id: st
 
   return (
     <>
-      <Link href="/contatos" className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-fg-muted hover:text-fg">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Contatos
-      </Link>
+      <Breadcrumbs items={[{ label: "Contatos", href: "/contatos" }, { label: contact.name }]} />
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{contact.name}</h1>
+          <h1 className="text-heading font-bold tracking-tight break-words text-fg sm:text-display">{contact.name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {contact.is_demo ? <Badge tone="info">Demonstração</Badge> : null}
             {contact.tags.map((t) => (
@@ -93,12 +97,25 @@ export default async function ContatoPage({ params }: { params: Promise<{ id: st
               title="Oportunidades"
               action={
                 stages.length > 0 ? (
-                  <OpportunityDialog stages={stages} members={members} packages={packages} contact={option} timeZone={tz} currentUserId={user.id} label="Nova oportunidade" />
+                  <OpportunityDialog
+                    stages={stages}
+                    members={members}
+                    packages={packages}
+                    contact={option}
+                    timeZone={tz}
+                    currentUserId={user.id}
+                    label="Nova oportunidade"
+                  />
                 ) : null
               }
             />
             {opportunities.length === 0 ? (
-              <EmptyState icon={Kanban} title="Nenhuma oportunidade" description="Crie uma oportunidade para acompanhar esta negociação no funil." className="py-8" />
+              <EmptyState
+                icon={Kanban}
+                title="Nenhuma oportunidade"
+                description="Crie uma oportunidade para acompanhar esta negociação no funil."
+                className="py-8"
+              />
             ) : (
               <OpportunityList opportunities={opportunities} stages={stages} />
             )}
@@ -161,27 +178,31 @@ export default async function ContatoPage({ params }: { params: Promise<{ id: st
                   <dd className="font-medium">{formatDate(contact.created_at)}</dd>
                 </div>
               </dl>
-              {contact.notes ? <p className="border-t border-line pt-3 text-[13px] whitespace-pre-line text-fg-muted">{contact.notes}</p> : null}
+              {contact.notes ? (
+                <p className="border-t border-line pt-3 text-label whitespace-pre-line text-fg-muted">{contact.notes}</p>
+              ) : null}
             </CardBody>
           </Card>
 
           <Card>
             <CardHeader title="Comunicações comerciais" />
             <CardBody className="space-y-2 text-sm">
-              <Badge tone={contact.marketing_consent === "granted" ? "brand" : contact.marketing_consent === "revoked" ? "danger" : "neutral"}>
+              <Badge
+                tone={contact.marketing_consent === "granted" ? "brand" : contact.marketing_consent === "revoked" ? "danger" : "neutral"}
+              >
                 {CONSENT_LABELS[contact.marketing_consent]}
               </Badge>
               {contact.marketing_consent === "granted" ? (
-                <p className="text-[13px] text-fg-muted">
+                <p className="text-label text-fg-muted">
                   Registrado em {formatDateTime(contact.consent_at, tz)}
                   {contact.consent_source ? ` · ${contact.consent_source}` : ""}
                 </p>
               ) : contact.marketing_consent === "revoked" ? (
-                <p className="text-[13px] text-fg-muted">
+                <p className="text-label text-fg-muted">
                   Descadastrado em {formatDateTime(contact.opted_out_at, tz)}. Campanhas e mensagens automáticas não são enviadas.
                 </p>
               ) : (
-                <p className="text-[13px] text-fg-muted">
+                <p className="text-label text-fg-muted">
                   Sem autorização registrada, este contato não recebe campanhas. Edite o contato para registrar o consentimento.
                 </p>
               )}

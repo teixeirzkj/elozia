@@ -81,7 +81,7 @@ export function AutomationForm(props: Props) {
         <CardHeader title="1. Quando" description="O gatilho e o intervalo que disparam a regra." />
         <CardBody className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="auto-trigger" className="block text-[13px] font-semibold">
+            <label htmlFor="auto-trigger" className="block text-label font-semibold">
               Gatilho
             </label>
             <select id="auto-trigger" value={trigger} onChange={(e) => setTrigger(e.target.value as TriggerType)} className="elz-field">
@@ -91,11 +91,11 @@ export function AutomationForm(props: Props) {
                 </option>
               ))}
             </select>
-            <p className="text-[13px] text-fg-subtle">{TRIGGERS[trigger].description}</p>
+            <p className="text-label text-fg-subtle">{TRIGGERS[trigger].description}</p>
           </div>
 
           <fieldset>
-            <legend className="mb-1.5 text-[13px] font-semibold">Intervalo</legend>
+            <legend className="mb-1.5 text-label font-semibold">Intervalo</legend>
             <div className="flex flex-wrap items-center gap-2">
               <input
                 type="number"
@@ -118,7 +118,7 @@ export function AutomationForm(props: Props) {
           </fieldset>
 
           <fieldset className="space-y-3">
-            <legend className="text-[13px] font-semibold">Condições (opcionais)</legend>
+            <legend className="text-label font-semibold">Condições (opcionais)</legend>
             <div className="grid gap-3 sm:grid-cols-3">
               {conditions.includes("stage") ? (
                 <select value={stageId} onChange={(e) => setStageId(e.target.value)} aria-label="Etapa do funil" className="elz-field">
@@ -163,7 +163,7 @@ export function AutomationForm(props: Props) {
           {actions.map((action, index) => (
             <div key={index} className="space-y-3 rounded-md border border-line p-4">
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-bold text-fg-muted">Ação {index + 1}</span>
+                <span className="text-label font-bold text-fg-muted">Ação {index + 1}</span>
                 <select
                   value={action.type}
                   onChange={(e) => setActions((list) => list.map((a, i) => (i === index ? newAction(e.target.value as AutomationAction["type"], props) : a)))}
@@ -208,7 +208,7 @@ export function AutomationForm(props: Props) {
                       aria-label="Prazo em horas"
                       className="elz-field"
                     />
-                    <span className="text-[13px] text-fg-muted">h</span>
+                    <span className="text-label text-fg-muted">h</span>
                   </div>
                   <select value={action.assignee_id ?? ""} onChange={(e) => update(index, { assignee_id: e.target.value || null })} aria-label="Responsável pela tarefa" className="elz-field">
                     <option value="">Responsável pelo contato ou oportunidade</option>
@@ -284,7 +284,7 @@ export function AutomationForm(props: Props) {
             Adicionar ação
           </Button>
           {templates.length === 0 ? (
-            <p className="text-[13px] text-fg-subtle">
+            <p className="text-label text-fg-subtle">
               Para agendar mensagens, conecte o WhatsApp e sincronize templates aprovados em Configurações › Canais.
             </p>
           ) : null}
@@ -295,13 +295,13 @@ export function AutomationForm(props: Props) {
         <CardHeader title="3. Nome e ativação" />
         <CardBody className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="auto-name" className="block text-[13px] font-semibold">
+            <label htmlFor="auto-name" className="block text-label font-semibold">
               Nome da automação
             </label>
             <input id="auto-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required placeholder="Ex.: Retomar proposta sem resposta" className="elz-field" />
           </div>
           <fieldset className="space-y-2">
-            <legend className="text-[13px] font-semibold">Situação</legend>
+            <legend className="text-label font-semibold">Situação</legend>
             {(
               [
                 ["active", "Ativa", "Passa a valer para o que vencer a partir da ativação. Situações antigas não disparam."],
@@ -309,10 +309,10 @@ export function AutomationForm(props: Props) {
               ] as const
             ).map(([value, label, hint]) => (
               <label key={value} className="flex cursor-pointer items-start gap-2.5 rounded-md border border-line p-3 text-sm has-[:checked]:border-ink">
-                <input type="radio" checked={status === value} onChange={() => setStatus(value)} className="mt-1 accent-[var(--elz-green-strong)]" />
+                <input type="radio" checked={status === value} onChange={() => setStatus(value)} className="mt-1" />
                 <span>
                   <strong>{label}</strong>
-                  <span className="block text-[13px] text-fg-muted">{hint}</span>
+                  <span className="block text-label text-fg-muted">{hint}</span>
                 </span>
               </label>
             ))}

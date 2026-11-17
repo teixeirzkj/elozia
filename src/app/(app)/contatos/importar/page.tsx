@@ -1,6 +1,5 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Card, CardBody, CardHeader, PageHeader } from "@/components/ui/primitives";
 import { requireCapabilityPage } from "@/lib/auth/session";
 import { ImportForm } from "@/modules/contacts/components/import-form";
@@ -11,10 +10,7 @@ export default async function ImportarContatosPage() {
   await requireCapabilityPage("crm.import");
   return (
     <>
-      <Link href="/contatos" className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-fg-muted hover:text-fg">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Contatos
-      </Link>
+      <Breadcrumbs items={[{ label: "Contatos", href: "/contatos" }, { label: "Importar contatos" }]} />
       <PageHeader title="Importar contatos" description="Envie um arquivo CSV com os contatos da agência." />
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <Card className="min-w-0">

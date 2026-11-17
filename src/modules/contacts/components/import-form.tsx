@@ -13,10 +13,10 @@ export function ImportForm() {
     <div className="space-y-5">
       <ActionForm action={importContactsAction} resetOnSuccess hideSuccess onSuccess={(state) => setSummary(state.data as ImportSummary)}>
         <Field name="file" label="Arquivo CSV" required>
-          {(field) => <input {...field} type="file" accept=".csv,text/csv" required className="elz-field file:mr-3 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1 file:text-[13px] file:font-semibold" />}
+          {(field) => <input {...field} type="file" accept=".csv,text/csv" required className="elz-field file:mr-3 file:rounded file:border-0 file:bg-muted file:px-3 file:py-1 file:text-label file:font-semibold" />}
         </Field>
-        <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-line p-3 text-[13px]">
-          <input type="checkbox" name="consent_confirmed" className="mt-0.5 h-4 w-4 accent-[var(--elz-green-strong)]" />
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-line p-3 text-label">
+          <input type="checkbox" name="consent_confirmed" className="mt-0.5 h-4 w-4" />
           <span>
             <strong>Declaro que a agência tem autorização</strong> dos contatos marcados com “sim” na coluna consentimento
             para receber comunicações comerciais. Sem esta declaração, todos entram como “não informado” e não recebem

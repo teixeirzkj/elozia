@@ -29,7 +29,12 @@ export default async function ReservasPage({ searchParams }: { searchParams: Pro
       />
       <Card className="overflow-hidden">
         <form method="get" className="flex flex-wrap gap-2 border-b border-line p-4">
-          <select name="situacao" defaultValue={params.situacao ?? ""} aria-label="Filtrar por situação" className="elz-field w-auto min-w-52">
+          <select
+            name="situacao"
+            defaultValue={params.situacao ?? ""}
+            aria-label="Filtrar por situação"
+            className="elz-field w-full sm:w-auto sm:min-w-52"
+          >
             <option value="">Todas as situações</option>
             {Object.entries(BOOKING_STATUS_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -47,7 +52,13 @@ export default async function ReservasPage({ searchParams }: { searchParams: Pro
           ) : null}
         </form>
         <BookingList bookings={bookings} packages={packages} showContact />
-        <Pagination page={page} pageSize={BOOKINGS_PAGE_SIZE} total={total} basePath="/viagens/reservas" params={{ situacao: params.situacao }} />
+        <Pagination
+          page={page}
+          pageSize={BOOKINGS_PAGE_SIZE}
+          total={total}
+          basePath="/viagens/reservas"
+          params={{ situacao: params.situacao }}
+        />
       </Card>
     </>
   );

@@ -13,7 +13,7 @@ export function AcceptInvitationButton({ token }: { token: string }) {
       {error ? <Alert tone="danger">{error}</Alert> : null}
       <Button
         variant="brand"
-        className="w-full"
+        className="min-h-touch w-full"
         disabled={pending}
         aria-busy={pending}
         onClick={() =>

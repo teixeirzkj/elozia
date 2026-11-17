@@ -1,4 +1,4 @@
-import { CalendarDays, Plane } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, FileText, MessagesSquare, Plane, Target, Timer, Trophy, UserPlus, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
@@ -41,7 +41,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   ]);
 
   const hasAnyData =
-    metrics.leads + metrics.open_opportunities + metrics.proposals_sent + metrics.sales_won + metrics.bookings_confirmed + metrics.conversations_pending + metrics.conversations_open + metrics.conversations_closed + metrics.tasks_open + departures.length > 0;
+    metrics.leads +
+      metrics.open_opportunities +
+      metrics.proposals_sent +
+      metrics.sales_won +
+      metrics.bookings_confirmed +
+      metrics.conversations_pending +
+      metrics.conversations_open +
+      metrics.conversations_closed +
+      metrics.tasks_open +
+      departures.length >
+    0;
   const rangeLabel = `${formatDate(period.fromDate)} a ${formatDate(period.toDate)}`;
 
   return (
@@ -56,7 +66,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 key={p.days}
                 href={`/dashboard?periodo=${p.days}`}
                 aria-current={p.days === days ? "page" : undefined}
-                className={cn("rounded px-3 py-1.5 text-[13px] font-semibold", p.days === days ? "bg-ink text-white" : "text-fg-muted hover:text-fg")}
+                className={cn(
+                  "inline-flex min-h-touch items-center rounded px-3 py-1.5 text-label font-semibold transition-colors sm:min-h-0",
+                  p.days === days ? "bg-ink text-white" : "text-fg-muted hover:bg-hover hover:text-fg",
+                )}
               >
                 {p.label}
               </Link>
@@ -92,16 +105,34 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       ) : null}
 
       <section aria-labelledby="dash-comercial" className="mb-6">
-        <h2 id="dash-comercial" className="mb-3 text-[13px] font-bold tracking-wide text-fg-muted uppercase">
-          Comercial
-        </h2>
+        <SectionTitle id="dash-comercial">Comercial</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <Stat label="Leads recebidos" value={metrics.leads} hint="Contatos cadastrados no período" />
-          <Stat label="Oportunidades abertas" value={metrics.open_opportunities} hint={`${formatMoney(metrics.open_value_cents)} em negociação hoje`} />
-          <Stat label="Propostas enviadas" value={metrics.proposals_sent} hint="Marcadas como enviadas no período" />
-          <Stat label="Vendas confirmadas" value={metrics.sales_won} hint="Oportunidades em etapa de ganho no período" />
+          <Stat label="Leads recebidos" icon={UserPlus} tone="brand" value={metrics.leads} hint="Contatos cadastrados no período" />
+          <Stat
+            label="Oportunidades abertas"
+            icon={Target}
+            tone="info"
+            value={metrics.open_opportunities}
+            hint={`${formatMoney(metrics.open_value_cents)} em negociação hoje`}
+          />
+          <Stat
+            label="Propostas enviadas"
+            icon={FileText}
+            tone="info"
+            value={metrics.proposals_sent}
+            hint="Marcadas como enviadas no período"
+          />
+          <Stat
+            label="Vendas confirmadas"
+            icon={Trophy}
+            tone="brand"
+            value={metrics.sales_won}
+            hint="Oportunidades em etapa de ganho no período"
+          />
           <Stat
             label="Valor das vendas registradas"
+            icon={Wallet}
+            tone="brand"
             value={formatMoney(metrics.sales_value_cents)}
             hint={`${metrics.bookings_confirmed} ${metrics.bookings_confirmed === 1 ? "reserva confirmada" : "reservas confirmadas"}${metrics.sales_other_currencies > 0 ? ` · ${metrics.sales_other_currencies} em outra moeda fora da soma` : ""}`}
           />
@@ -109,15 +140,32 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section aria-labelledby="dash-atendimento" className="mb-6">
-        <h2 id="dash-atendimento" className="mb-3 text-[13px] font-bold tracking-wide text-fg-muted uppercase">
-          Atendimento
-        </h2>
+        <SectionTitle id="dash-atendimento">Atendimento</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Conversas pendentes" value={metrics.conversations_pending} hint="Aguardando um atendente agora" />
-          <Stat label="Conversas em atendimento" value={metrics.conversations_open} hint="Abertas neste momento" />
-          <Stat label="Conversas concluídas" value={metrics.conversations_closed} hint="Concluídas no período" />
+          <Stat
+            label="Conversas pendentes"
+            icon={Clock}
+            tone={metrics.conversations_pending > 0 ? "warning" : "neutral"}
+            value={metrics.conversations_pending}
+            hint="Aguardando um atendente agora"
+          />
+          <Stat
+            label="Conversas em atendimento"
+            icon={MessagesSquare}
+            tone="info"
+            value={metrics.conversations_open}
+            hint="Abertas neste momento"
+          />
+          <Stat
+            label="Conversas concluídas"
+            icon={CheckCircle2}
+            tone="brand"
+            value={metrics.conversations_closed}
+            hint="Concluídas no período"
+          />
           <Stat
             label="Tempo médio de primeira resposta"
+            icon={Timer}
             value={formatDuration(metrics.first_response_avg_seconds)}
             hint={
               metrics.first_response_count === 0
@@ -128,55 +176,71 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden">
-          <CardHeader
-            title="Próximas viagens"
-            description="Saídas ativas a partir de hoje."
-            action={
-              <LinkButton href="/viagens" variant="secondary" size="sm">
-                Ver catálogo
-              </LinkButton>
-            }
-          />
-          {departures.length === 0 ? (
-            <EmptyState icon={CalendarDays} title="Nenhuma saída futura" description="As saídas cadastradas nos pacotes aparecem aqui." className="py-10" />
-          ) : (
-            <ul className="divide-y divide-line">
-              {departures.map((dep) => (
-                <li key={dep.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
-                  <div className="min-w-0">
-                    <Link href={`/viagens/${dep.package_id}`} className="font-semibold hover:underline">
-                      {dep.package_name}
-                    </Link>
-                    <p className="text-[13px] text-fg-muted">{dep.destination}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold">{formatDate(dep.departs_on)}</p>
-                    <p className="text-xs text-fg-subtle">
-                      {dep.travelers_booked} {dep.travelers_booked === 1 ? "viajante" : "viajantes"} em reservas
-                      {dep.seats_total != null ? ` · ${dep.seats_total} vagas (interno)` : ""}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <section aria-labelledby="dash-agenda">
+        <SectionTitle id="dash-agenda">Agenda</SectionTitle>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="overflow-hidden">
+            <CardHeader
+              title="Próximas viagens"
+              description="Saídas ativas a partir de hoje."
+              action={
+                <LinkButton href="/viagens" variant="secondary" size="sm">
+                  Ver catálogo
+                </LinkButton>
+              }
+            />
+            {departures.length === 0 ? (
+              <EmptyState
+                icon={CalendarDays}
+                title="Nenhuma saída futura"
+                description="As saídas cadastradas nos pacotes aparecem aqui."
+                className="py-10"
+              />
+            ) : (
+              <ul className="divide-y divide-line">
+                {departures.map((dep) => (
+                  <li key={dep.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
+                    <div className="min-w-0">
+                      <Link href={`/viagens/${dep.package_id}`} className="font-semibold hover:underline">
+                        {dep.package_name}
+                      </Link>
+                      <p className="text-label text-fg-muted">{dep.destination}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold">{formatDate(dep.departs_on)}</p>
+                      <p className="text-xs text-fg-subtle">
+                        {dep.travelers_booked} {dep.travelers_booked === 1 ? "viajante" : "viajantes"} em reservas
+                        {dep.seats_total != null ? ` · ${dep.seats_total} vagas (interno)` : ""}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
 
-        <Card className="overflow-hidden">
-          <CardHeader
-            title="Minhas atividades pendentes"
-            description={
-              metrics.tasks_open === 0
-                ? "Nenhuma tarefa aberta na agência."
-                : `${metrics.tasks_open} ${metrics.tasks_open === 1 ? "tarefa aberta" : "tarefas abertas"} na agência${metrics.tasks_overdue > 0 ? `, ${metrics.tasks_overdue} em atraso` : ""}.`
-            }
-            action={<TaskDialog members={members} currentUserId={user.id} />}
-          />
-          <TaskList tasks={tasks} timeZone={tz} showContact emptyText="Você não tem tarefas pendentes." />
-        </Card>
-      </div>
+          <Card className="overflow-hidden">
+            <CardHeader
+              title="Minhas atividades pendentes"
+              description={
+                metrics.tasks_open === 0
+                  ? "Nenhuma tarefa aberta na agência."
+                  : `${metrics.tasks_open} ${metrics.tasks_open === 1 ? "tarefa aberta" : "tarefas abertas"} na agência${metrics.tasks_overdue > 0 ? `, ${metrics.tasks_overdue} em atraso` : ""}.`
+              }
+              action={<TaskDialog members={members} currentUserId={user.id} />}
+            />
+            <TaskList tasks={tasks} timeZone={tz} showContact emptyText="Você não tem tarefas pendentes." />
+          </Card>
+        </div>
+      </section>
     </>
+  );
+}
+
+function SectionTitle({ id, children }: { id: string; children: string }) {
+  return (
+    <h2 id={id} className="mb-3 text-label font-bold tracking-wide text-fg-muted uppercase">
+      {children}
+    </h2>
   );
 }

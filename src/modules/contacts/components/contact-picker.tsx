@@ -34,7 +34,7 @@ export function ContactPicker({ name = "contact_id", initial, locked = false }: 
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-[13px] font-semibold">
+      <label htmlFor={selected ? undefined : id} className="block text-label font-semibold">
         Contato <span className="text-danger" aria-hidden="true">*</span>
       </label>
       <input type="hidden" name={name} value={selected?.id ?? ""} />
@@ -50,7 +50,7 @@ export function ContactPicker({ name = "contact_id", initial, locked = false }: 
                 setOpen(true);
               }}
               aria-label="Trocar contato"
-              className="cursor-pointer rounded p-0.5 text-fg-subtle hover:text-fg"
+              className="-my-2 -mr-2 inline-flex min-h-touch min-w-touch shrink-0 cursor-pointer items-center justify-center rounded text-fg-subtle hover:text-fg sm:my-0 sm:mr-0 sm:min-h-0 sm:min-w-0 sm:p-0.5"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -77,9 +77,9 @@ export function ContactPicker({ name = "contact_id", initial, locked = false }: 
               role="listbox"
               className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-line bg-surface p-1 shadow-pop"
             >
-              {loading && results.length === 0 ? <li className="px-3 py-2 text-[13px] text-fg-subtle">Buscando…</li> : null}
+              {loading && results.length === 0 ? <li className="px-3 py-2 text-label text-fg-subtle">Buscando…</li> : null}
               {!loading && results.length === 0 ? (
-                <li className="px-3 py-2 text-[13px] text-fg-subtle">Nenhum contato encontrado. Cadastre-o em Contatos.</li>
+                <li className="px-3 py-2 text-label text-fg-subtle">Nenhum contato encontrado. Cadastre-o em Contatos.</li>
               ) : null}
               {results.map((option) => (
                 <li key={option.id} role="option" aria-selected="false">
@@ -89,7 +89,7 @@ export function ContactPicker({ name = "contact_id", initial, locked = false }: 
                       setSelected(option);
                       setOpen(false);
                     }}
-                    className="w-full cursor-pointer rounded px-3 py-2 text-left text-sm hover:bg-muted"
+                    className="min-h-touch w-full cursor-pointer rounded px-3 py-2 text-left text-sm hover:bg-muted sm:min-h-0"
                   >
                     {option.name}
                   </button>
@@ -100,7 +100,7 @@ export function ContactPicker({ name = "contact_id", initial, locked = false }: 
         </div>
       )}
       {error ? (
-        <p className="text-[13px] text-danger" role="alert">
+        <p className="text-label text-danger" role="alert">
           Selecione um contato.
         </p>
       ) : null}

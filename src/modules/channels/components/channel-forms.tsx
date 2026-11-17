@@ -1,6 +1,7 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { ActionForm, SubmitButton, TextField } from "@/components/ui/form";
@@ -53,25 +54,36 @@ export function ConnectForm({ requireAppSecret, reconnect }: { requireAppSecret:
   );
 }
 
-export function SyncTemplatesButton({ channelId }: { channelId: string }) {
+/**
+ * Sincroniza os templates de um canal com a Meta. `channelLabel` identifica o
+ * número quando há mais de um canal na mesma tela.
+ */
+export function SyncTemplatesButton({ channelId, channelLabel }: { channelId: string; channelLabel?: string }) {
   const [pending, startTransition] = useTransition();
   const toast = useToast();
+  const router = useRouter();
   return (
     <Button
       variant="secondary"
       size="sm"
+      className="max-md:min-h-touch"
       disabled={pending}
       aria-busy={pending}
       onClick={() =>
         startTransition(async () => {
           const result = await syncTemplatesAction(channelId);
-          if (result.ok) toast.success(result.message ?? "Templates sincronizados.");
-          else toast.error(result.error ?? "Não foi possível sincronizar.");
+          if (result.ok) {
+            toast.success(result.message ?? "Templates sincronizados.");
+            // A ação revalida só a página de canais; atualiza também a tela atual (ex.: Modelos).
+            router.refresh();
+          } else {
+            toast.error(result.error ?? "Não foi possível sincronizar.");
+          }
         })
       }
     >
       <RefreshCw className={pending ? "h-4 w-4 animate-spin" : "h-4 w-4"} aria-hidden="true" />
-      Sincronizar templates
+      {channelLabel ? `Sincronizar ${channelLabel}` : "Sincronizar templates"}
     </Button>
   );
 }

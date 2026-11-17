@@ -18,6 +18,7 @@ function ActionButton({ action, label, icon, variant = "secondary" }: { action: 
     <Button
       variant={variant}
       size="sm"
+      className="max-md:h-touch"
       disabled={pending}
       aria-busy={pending}
       onClick={() =>
@@ -79,6 +80,7 @@ export function ConversationActions({
             icon={<ArrowRightLeft className="h-4 w-4" aria-hidden="true" />}
             variant="secondary"
             buttonSize="sm"
+            className="max-md:h-touch"
             title="Transferir atendimento"
             size="sm"
           >
@@ -91,14 +93,14 @@ export function ConversationActions({
                   close();
                 }}
               >
-                <fieldset className="flex gap-4 text-sm">
+                <fieldset className="flex gap-4 text-body">
                   <legend className="sr-only">Destino</legend>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input type="radio" checked={target === "assignee"} onChange={() => setTarget("assignee")} className="accent-[var(--elz-green-strong)]" />
+                  <label className="flex min-h-touch cursor-pointer items-center gap-2 md:min-h-0">
+                    <input type="radio" name="destino" value="assignee" checked={target === "assignee"} onChange={() => setTarget("assignee")} />
                     Atendente
                   </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input type="radio" checked={target === "team"} onChange={() => setTarget("team")} disabled={teams.length === 0} className="accent-[var(--elz-green-strong)]" />
+                  <label className="flex min-h-touch cursor-pointer items-center gap-2 md:min-h-0">
+                    <input type="radio" name="destino" value="team" checked={target === "team"} onChange={() => setTarget("team")} disabled={teams.length === 0} />
                     Equipe
                   </label>
                 </fieldset>
@@ -135,7 +137,7 @@ export function ConversationActions({
                 )}
                 {teams.length === 0 ? <p className="text-xs text-fg-subtle">Nenhuma equipe criada. Crie equipes em Configurações › Equipe.</p> : null}
                 <div className="flex justify-end gap-2">
-                  <Button variant="secondary" onClick={close}>
+                  <Button variant="secondary" onClick={close} className="max-md:h-touch">
                     Cancelar
                   </Button>
                   <SubmitButton>Transferir</SubmitButton>

@@ -1,8 +1,10 @@
-import { ArrowLeft, Send, Trash2 } from "lucide-react";
+import { AlertTriangle, Ban, CheckCheck, Send, Trash2, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { DataList } from "@/components/ui/data-list";
 import { ConfirmButton } from "@/components/ui/dialog";
 import { Badge, Card, CardHeader, EmptyState, Stat } from "@/components/ui/primitives";
 import { requireMembership } from "@/lib/auth/session";
@@ -16,9 +18,29 @@ import { CAMPAIGN_STATUS_LABELS, RECIPIENT_STATUS_LABELS } from "@/modules/campa
 
 export const metadata: Metadata = { title: "Campanha" };
 
-const statusTone = { draft: "neutral", scheduled: "info", running: "warning", completed: "brand", cancelled: "neutral", failed: "danger" } as const;
-const recipientTone = { pending: "info", sending: "info", sent: "brand", failed: "danger", skipped: "warning", cancelled: "neutral" } as const;
-const DELIVERY_LABELS: Record<string, string> = { sent: "enviada", delivered: "entregue", read: "lida", failed: "falhou na entrega", queued: "na fila" };
+const statusTone = {
+  draft: "neutral",
+  scheduled: "info",
+  running: "progress",
+  completed: "won",
+  cancelled: "neutral",
+  failed: "danger",
+} as const;
+const recipientTone = {
+  pending: "info",
+  sending: "info",
+  sent: "brand",
+  failed: "danger",
+  skipped: "warning",
+  cancelled: "neutral",
+} as const;
+const DELIVERY_LABELS: Record<string, string> = {
+  sent: "enviada",
+  delivered: "entregue",
+  read: "lida",
+  failed: "falhou na entrega",
+  queued: "na fila",
+};
 
 export default async function CampanhaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -30,19 +52,19 @@ export default async function CampanhaPage({ params }: { params: Promise<{ id: s
 
   const canManage = can(membership.role, "automations.manage");
   const editable = canManage && (campaign.status === "draft" || campaign.status === "scheduled");
-  const [recipients, options] = await Promise.all([listRecipients(supabase, orgId, id), editable ? loadRuleOptions(supabase, orgId) : Promise.resolve(null)]);
+  const [recipients, options] = await Promise.all([
+    listRecipients(supabase, orgId, id),
+    editable ? loadRuleOptions(supabase, orgId) : Promise.resolve(null),
+  ]);
   const count = (statuses: string[]) => recipients.filter((r) => statuses.includes(r.status)).length;
   const delivered = recipients.filter((r) => r.delivery === "delivered" || r.delivery === "read").length;
 
   return (
     <>
-      <Link href="/campanhas" className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-fg-muted hover:text-fg">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Campanhas
-      </Link>
+      <Breadcrumbs items={[{ label: "Campanhas", href: "/campanhas" }, { label: campaign.name }]} />
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{campaign.name}</h1>
+          <h1 className="text-heading font-bold tracking-tight break-words text-fg sm:text-display">{campaign.name}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-fg-muted">
             <Badge tone={statusTone[campaign.status]}>{CAMPAIGN_STATUS_LABELS[campaign.status]}</Badge>
             <Link href={`/viagens/${campaign.package_id}`} className="font-medium hover:underline">
@@ -88,11 +110,17 @@ export default async function CampanhaPage({ params }: { params: Promise<{ id: s
 
       {campaign.total_recipients > 0 ? (
         <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <Stat label="Destinatários" value={campaign.total_recipients} />
-          <Stat label="Enviadas" value={count(["sent"])} />
-          <Stat label="Entregues ou lidas" value={delivered} hint="Conforme os status recebidos da Meta" />
-          <Stat label="Falhas" value={count(["failed"])} />
-          <Stat label="Não enviadas" value={count(["skipped", "cancelled"])} hint="Sem consentimento no envio ou canceladas" />
+          <Stat label="Destinatários" icon={Users} value={campaign.total_recipients} />
+          <Stat label="Enviadas" icon={Send} tone="info" value={count(["sent"])} />
+          <Stat label="Entregues ou lidas" icon={CheckCheck} tone="brand" value={delivered} hint="Conforme os status recebidos da Meta" />
+          <Stat label="Falhas" icon={AlertTriangle} tone={count(["failed"]) > 0 ? "danger" : "neutral"} value={count(["failed"])} />
+          <Stat
+            label="Não enviadas"
+            icon={Ban}
+            tone="warning"
+            value={count(["skipped", "cancelled"])}
+            hint="Sem consentimento no envio ou canceladas"
+          />
         </div>
       ) : null}
 
@@ -111,33 +139,42 @@ export default async function CampanhaPage({ params }: { params: Promise<{ id: s
               className="py-10"
             />
           ) : (
-            <div className="max-h-[32rem] overflow-auto">
-              <table className="elz-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Contato</th>
-                    <th scope="col">Situação</th>
-                    <th scope="col">Detalhe</th>
-                    <th scope="col">Processado em</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recipients.map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <Link href={`/contatos/${r.contact_id}`} className="font-medium hover:underline">
-                          {r.contact_name}
-                        </Link>
-                      </td>
-                      <td>
-                        <Badge tone={recipientTone[r.status]}>{RECIPIENT_STATUS_LABELS[r.status]}</Badge>
-                      </td>
-                      <td className="text-[13px] text-fg-muted">{r.error ?? (r.delivery ? `Na Meta: ${DELIVERY_LABELS[r.delivery] ?? r.delivery}` : "—")}</td>
-                      <td className="text-[13px] whitespace-nowrap">{formatDateTime(r.processed_at, tz)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            // Área rolável focável, para quem navega pelo teclado conseguir rolar o histórico.
+            <div className="max-h-128 overflow-y-auto" tabIndex={0} role="region" aria-label="Histórico de envios (rolável)">
+              <DataList
+                caption="Histórico de envios"
+                rows={recipients}
+                getKey={(r) => r.id}
+                columns={[
+                  {
+                    key: "contato",
+                    header: "Contato",
+                    primary: true,
+                    cell: (r) => (
+                      <Link href={`/contatos/${r.contact_id}`} className="font-medium hover:underline">
+                        {r.contact_name}
+                      </Link>
+                    ),
+                  },
+                  {
+                    key: "situacao",
+                    header: "Situação",
+                    cell: (r) => <Badge tone={recipientTone[r.status]}>{RECIPIENT_STATUS_LABELS[r.status]}</Badge>,
+                  },
+                  {
+                    key: "detalhe",
+                    header: "Detalhe",
+                    className: "text-label text-fg-muted",
+                    cell: (r) => r.error ?? (r.delivery ? `Na Meta: ${DELIVERY_LABELS[r.delivery] ?? r.delivery}` : "—"),
+                  },
+                  {
+                    key: "processado",
+                    header: "Processado em",
+                    className: "text-label whitespace-nowrap",
+                    cell: (r) => formatDateTime(r.processed_at, tz),
+                  },
+                ]}
+              />
             </div>
           )}
         </Card>
@@ -145,7 +182,9 @@ export default async function CampanhaPage({ params }: { params: Promise<{ id: s
 
       {options ? (
         <>
-          <h2 className="mb-3 text-base font-bold">{campaign.status === "draft" ? "Concluir rascunho" : "Editar campanha agendada"}</h2>
+          <h2 className="mb-3 text-title font-bold text-fg">
+            {campaign.status === "draft" ? "Concluir rascunho" : "Editar campanha agendada"}
+          </h2>
           <CampaignForm campaign={campaign} packages={options.packages} tags={options.tags} templates={options.templates} timeZone={tz} />
         </>
       ) : null}

@@ -23,15 +23,15 @@ export function TemplateVariables({
 
   return (
     <div className="space-y-3">
-      <p className="rounded-md bg-muted p-3 text-[13px] whitespace-pre-line text-fg-muted">
+      <p className="rounded-md bg-muted p-3 text-label whitespace-pre-line text-fg-muted">
         {[template.spec.headerText, template.spec.bodyText, template.spec.footerText].filter(Boolean).join("\n\n")}
       </p>
-      {params.length === 0 ? <p className="text-[13px] text-fg-subtle">Este template não tem variáveis.</p> : null}
+      {params.length === 0 ? <p className="text-label text-fg-subtle">Este template não tem variáveis.</p> : null}
       {params.map(([key, label]) => {
         const rule = value[key] ?? { source: "contact_first_name" as TemplateVariableSource };
         return (
           <div key={key} className="grid gap-2 sm:grid-cols-[150px_1fr_1fr] sm:items-center">
-            <label htmlFor={`${idPrefix}-${key}`} className="text-[13px] font-semibold">
+            <label htmlFor={`${idPrefix}-${key}`} className="text-label font-semibold">
               {label}
             </label>
             <select

@@ -67,19 +67,19 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
       <Card className="mb-6">
         <form method="get" className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-[repeat(4,1fr)_auto]">
           <div className="space-y-1.5">
-            <label htmlFor="rel-de" className="block text-[13px] font-semibold">
+            <label htmlFor="rel-de" className="block text-label font-semibold">
               De
             </label>
             <input id="rel-de" type="date" name="de" defaultValue={period.fromDate} className="elz-field" />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="rel-ate" className="block text-[13px] font-semibold">
+            <label htmlFor="rel-ate" className="block text-label font-semibold">
               Até
             </label>
             <input id="rel-ate" type="date" name="ate" defaultValue={period.toDate} className="elz-field" />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="rel-atendente" className="block text-[13px] font-semibold">
+            <label htmlFor="rel-atendente" className="block text-label font-semibold">
               Atendente
             </label>
             <select id="rel-atendente" name="atendente" defaultValue={filters.owner ?? ""} className="elz-field">
@@ -92,7 +92,7 @@ export default async function RelatoriosPage({ searchParams }: { searchParams: P
             </select>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="rel-pacote" className="block text-[13px] font-semibold">
+            <label htmlFor="rel-pacote" className="block text-label font-semibold">
               Viagem
             </label>
             <select id="rel-pacote" name="pacote" defaultValue={filters.packageId ?? ""} className="elz-field">

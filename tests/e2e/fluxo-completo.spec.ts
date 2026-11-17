@@ -43,7 +43,7 @@ async function adminCreateUser(user: { email: string; password: string }, metada
 async function signIn(page: Page, user: { email: string; password: string }) {
   await page.goto("/entrar");
   await page.getByLabel("E-mail").fill(user.email);
-  await page.getByLabel("Senha").fill(user.password);
+  await page.getByLabel(/^Senha/).fill(user.password);
   await page.getByRole("button", { name: "Entrar" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
 }
@@ -78,14 +78,14 @@ test.describe("fluxo completo do MVP", () => {
       await adminCreateUser(owner, { full_name: owner.name, agency_name: agency });
       await page.goto("/entrar");
       await page.getByLabel("E-mail").fill(owner.email);
-      await page.getByLabel("Senha").fill(owner.password);
+      await page.getByLabel(/^Senha/).fill(owner.password);
       await page.getByRole("button", { name: "Entrar" }).click();
     } else {
       await page.goto("/cadastro");
       await page.getByLabel("Nome da agência").fill(agency);
       await page.getByLabel("Seu nome").fill(owner.name);
       await page.getByLabel("E-mail").fill(owner.email);
-      await page.getByLabel("Senha").fill(owner.password);
+      await page.getByLabel(/^Senha/).fill(owner.password);
       await page.getByRole("button", { name: "Criar conta" }).click();
     }
 
@@ -116,12 +116,12 @@ test.describe("fluxo completo do MVP", () => {
       await adminCreateUser(agent, { full_name: agent.name });
       await guestPage.getByRole("link", { name: "Entrar para aceitar" }).click();
       await guestPage.getByLabel("E-mail").fill(agent.email);
-      await guestPage.getByLabel("Senha").fill(agent.password);
+      await guestPage.getByLabel(/^Senha/).fill(agent.password);
       await guestPage.getByRole("button", { name: "Entrar" }).click();
       await guestPage.getByRole("button", { name: "Aceitar convite" }).click();
     } else {
       await guestPage.getByLabel("Seu nome").fill(agent.name);
-      await guestPage.getByLabel("Crie uma senha").fill(agent.password);
+      await guestPage.getByLabel(/^Crie uma senha/).fill(agent.password);
       await guestPage.getByRole("button", { name: "Criar conta e aceitar" }).click();
     }
     await expect(guestPage).toHaveURL(/\/dashboard/);
@@ -211,24 +211,24 @@ test.describe("fluxo completo do MVP", () => {
     await page.getByRole("dialog").getByLabel("Valor oferecido", { exact: false }).fill("4.800,00");
     await page.getByRole("dialog").getByLabel("Situação", { exact: false }).selectOption("sent");
     await page.getByRole("button", { name: "Salvar proposta" }).click();
-    await expect(page.getByText("Enviada", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Enviada", { exact: true }).filter({ visible: true }).first()).toBeVisible();
 
     // Follow-up: tarefa para retomar o contato.
     await page.getByRole("button", { name: "Nova tarefa" }).click();
     await page.getByRole("dialog").getByLabel("O que precisa ser feito", { exact: false }).fill("Retomar proposta");
     await page.getByRole("button", { name: "Criar tarefa" }).click();
-    await expect(page.getByText("Retomar proposta").first()).toBeVisible();
+    await expect(page.getByText("Retomar proposta").filter({ visible: true }).first()).toBeVisible();
 
     // Confirma a venda movendo no quadro e registrando a reserva.
     await page.goto("/funil");
     await page.getByLabel(`Mover ${lead} para outra etapa`).selectOption({ label: "Mover para Venda confirmada" });
     await page.goto(opportunityUrl);
-    await expect(page.getByText("Venda confirmada").first()).toBeVisible();
+    await expect(page.getByText("Venda confirmada").filter({ visible: true }).first()).toBeVisible();
     await page.getByRole("button", { name: "Nova reserva" }).click();
     await page.getByRole("dialog").getByLabel("Valor total", { exact: false }).fill("4.800,00");
     await page.getByRole("dialog").getByLabel("Situação da reserva", { exact: false }).selectOption("confirmed");
     await page.getByRole("button", { name: "Salvar reserva" }).click();
-    await expect(page.getByText("Confirmada", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Confirmada", { exact: true }).filter({ visible: true }).first()).toBeVisible();
 
     // A movimentação persiste após recarregar e fica no histórico.
     await page.reload();
@@ -238,7 +238,7 @@ test.describe("fluxo completo do MVP", () => {
   test("6. visualiza dashboard e relatório com os números reais", async ({ page }) => {
     await signIn(page, owner);
     await expect(page.getByText("Ainda não há dados para mostrar")).toHaveCount(0);
-    await expect(page.getByText("R$ 4.800,00").first()).toBeVisible();
+    await expect(page.getByText("R$ 4.800,00").filter({ visible: true }).first()).toBeVisible();
 
     await page.goto("/relatorios");
     // Vendas por pacote: uma oportunidade ganha, uma reserva confirmada, dois viajantes.

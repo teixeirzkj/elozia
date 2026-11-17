@@ -2,6 +2,7 @@ import { Search, Upload, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button, LinkButton } from "@/components/ui/button";
+import { DataList } from "@/components/ui/data-list";
 import { Pagination } from "@/components/ui/pagination";
 import { Badge, Card, EmptyState, PageHeader, TagChip } from "@/components/ui/primitives";
 import { requireMembership } from "@/lib/auth/session";
@@ -55,7 +56,11 @@ export default async function ContatosPage({ searchParams }: { searchParams: Pro
       />
 
       <Card className="overflow-hidden">
-        <form method="get" className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)_auto]" role="search">
+        <form
+          method="get"
+          className="grid gap-3 border-b border-line p-4 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)_auto]"
+          role="search"
+        >
           <div className="relative">
             <Search className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-fg-subtle" aria-hidden="true" />
             <input
@@ -91,7 +96,12 @@ export default async function ContatosPage({ searchParams }: { searchParams: Pro
               </option>
             ))}
           </select>
-          <select name="consentimento" defaultValue={params.consentimento ?? ""} aria-label="Filtrar por consentimento" className="elz-field">
+          <select
+            name="consentimento"
+            defaultValue={params.consentimento ?? ""}
+            aria-label="Filtrar por consentimento"
+            className="elz-field"
+          >
             <option value="">Qualquer consentimento</option>
             {Object.entries(CONSENT_LABELS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -123,48 +133,72 @@ export default async function ContatosPage({ searchParams }: { searchParams: Pro
           )
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="elz-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">Telefone</th>
-                    <th scope="col">Etiquetas</th>
-                    <th scope="col">Origem</th>
-                    <th scope="col">Responsável</th>
-                    <th scope="col">Comunicações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {contacts.map((c) => (
-                    <tr key={c.id}>
-                      <td>
-                        <Link href={`/contatos/${c.id}`} className="font-semibold hover:underline">
-                          {c.name}
-                        </Link>
-                        {c.is_demo ? <Badge tone="info" className="ml-2">Demonstração</Badge> : null}
-                        {c.email ? <p className="text-[13px] text-fg-subtle">{c.email}</p> : null}
-                      </td>
-                      <td className="whitespace-nowrap">{formatPhone(c.phone_e164)}</td>
-                      <td>
-                        <div className="flex max-w-56 flex-wrap gap-1">
-                          {c.tags.map((t) => (
-                            <TagChip key={t.id} name={t.name} color={t.color} />
-                          ))}
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap text-fg-muted">{CONTACT_SOURCES[c.source]}</td>
-                      <td className="whitespace-nowrap text-fg-muted">{c.owner_id ? (memberName.get(c.owner_id) ?? "—") : "—"}</td>
-                      <td>
-                        <Badge tone={c.marketing_consent === "granted" ? "brand" : c.marketing_consent === "revoked" ? "danger" : "neutral"}>
-                          {c.marketing_consent === "granted" ? "Autorizou" : c.marketing_consent === "revoked" ? "Descadastrado" : "Não informado"}
+            <DataList
+              caption="Contatos da agência"
+              rows={contacts}
+              getKey={(c) => c.id}
+              columns={[
+                {
+                  key: "nome",
+                  header: "Nome",
+                  primary: true,
+                  cell: (c) => (
+                    <div className="min-w-0">
+                      <Link href={`/contatos/${c.id}`} className="font-semibold hover:underline">
+                        {c.name}
+                      </Link>
+                      {c.is_demo ? (
+                        <Badge tone="info" className="ml-2">
+                          Demonstração
                         </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      ) : null}
+                      {c.email ? <p className="truncate text-label font-normal text-fg-subtle">{c.email}</p> : null}
+                    </div>
+                  ),
+                },
+                { key: "telefone", header: "Telefone", className: "whitespace-nowrap", cell: (c) => formatPhone(c.phone_e164) },
+                {
+                  key: "etiquetas",
+                  header: "Etiquetas",
+                  cell: (c) =>
+                    c.tags.length === 0 ? (
+                      <span className="text-fg-subtle">—</span>
+                    ) : (
+                      <div className="flex max-w-56 flex-wrap gap-1">
+                        {c.tags.map((t) => (
+                          <TagChip key={t.id} name={t.name} color={t.color} />
+                        ))}
+                      </div>
+                    ),
+                },
+                {
+                  key: "origem",
+                  header: "Origem",
+                  hideOnMobile: true,
+                  className: "whitespace-nowrap text-fg-muted",
+                  cell: (c) => CONTACT_SOURCES[c.source],
+                },
+                {
+                  key: "responsavel",
+                  header: "Responsável",
+                  className: "whitespace-nowrap text-fg-muted",
+                  cell: (c) => (c.owner_id ? (memberName.get(c.owner_id) ?? "—") : "—"),
+                },
+                {
+                  key: "comunicacoes",
+                  header: "Comunicações",
+                  cell: (c) => (
+                    <Badge tone={c.marketing_consent === "granted" ? "brand" : c.marketing_consent === "revoked" ? "danger" : "neutral"}>
+                      {c.marketing_consent === "granted"
+                        ? "Autorizou"
+                        : c.marketing_consent === "revoked"
+                          ? "Descadastrado"
+                          : "Não informado"}
+                    </Badge>
+                  ),
+                },
+              ]}
+            />
             <Pagination
               page={page}
               pageSize={CONTACTS_PAGE_SIZE}

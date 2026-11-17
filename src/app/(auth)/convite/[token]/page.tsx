@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { Button, LinkButton } from "@/components/ui/button";
-import { ActionForm, SubmitButton, TextField } from "@/components/ui/form";
+import { ActionForm, PasswordField, SubmitButton, TextField } from "@/components/ui/form";
 import { getSession } from "@/lib/auth/session";
 import { isRole, ROLE_LABELS } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { invitedSignUpAction, signOutAction } from "@/modules/auth/actions";
 import { AcceptInvitationButton } from "@/modules/auth/components/accept-invitation-button";
+import { AuthFooter, AuthHeading, AuthLink } from "../../_components/auth-ui";
 
 export const metadata: Metadata = { title: "Convite" };
 
@@ -20,12 +20,11 @@ export default async function ConvitePage({ params }: { params: Promise<{ token:
   if (!invitation) {
     return (
       <>
-        <h1 className="text-xl font-bold tracking-tight">Convite indisponível</h1>
-        <p className="mt-2 text-sm text-fg-muted">
+        <AuthHeading title="Convite indisponível">
           Este convite é inválido, já foi usado, foi cancelado ou expirou. Peça um novo convite ao responsável pela sua
           agência.
-        </p>
-        <LinkButton href="/entrar" variant="secondary" className="mt-5 w-full">
+        </AuthHeading>
+        <LinkButton href="/entrar" variant="secondary" className="min-h-touch w-full">
           Ir para o login
         </LinkButton>
       </>
@@ -35,13 +34,10 @@ export default async function ConvitePage({ params }: { params: Promise<{ token:
   const session = await getSession();
   const roleLabel = isRole(invitation.role) ? ROLE_LABELS[invitation.role] : invitation.role;
   const intro = (
-    <>
-      <h1 className="text-xl font-bold tracking-tight">Convite para {invitation.organization_name}</h1>
-      <p className="mt-1 mb-5 text-sm text-fg-muted">
-        Você foi convidado como <strong className="text-fg">{roleLabel}</strong> usando o e-mail{" "}
-        <strong className="text-fg">{invitation.email}</strong>.
-      </p>
-    </>
+    <AuthHeading title={`Convite para ${invitation.organization_name}`}>
+      Você foi convidado como <strong className="font-semibold text-fg">{roleLabel}</strong> usando o e-mail{" "}
+      <strong className="font-semibold break-all text-fg">{invitation.email}</strong>.
+    </AuthHeading>
   );
 
   if (session) {
@@ -62,7 +58,7 @@ export default async function ConvitePage({ params }: { params: Promise<{ token:
           </Alert>
         )}
         <form action={signOutAction} className="mt-3">
-          <Button type="submit" variant="ghost" className="w-full">
+          <Button type="submit" variant="ghost" className="min-h-touch w-full">
             Sair desta conta
           </Button>
         </form>
@@ -76,25 +72,21 @@ export default async function ConvitePage({ params }: { params: Promise<{ token:
       <ActionForm action={invitedSignUpAction}>
         <input type="hidden" name="token" value={token} />
         <TextField name="full_name" label="Seu nome" autoComplete="name" required maxLength={120} />
-        <TextField
+        <PasswordField
           name="password"
           label="Crie uma senha"
-          type="password"
           autoComplete="new-password"
           hint="Pelo menos 8 caracteres, com letras e números."
           required
         />
-        <SubmitButton className="w-full">Criar conta e aceitar</SubmitButton>
+        <SubmitButton className="min-h-touch w-full">Criar conta e aceitar</SubmitButton>
       </ActionForm>
-      <p className="mt-5 text-sm text-fg-muted">
-        Já tem conta com este e-mail?{" "}
-        <Link
-          href={`/entrar?proximo=${encodeURIComponent(`/convite/${token}`)}`}
-          className="font-semibold text-brand-strong hover:underline"
-        >
-          Entrar para aceitar
-        </Link>
-      </p>
+      <AuthFooter>
+        <p className="flex flex-wrap items-center gap-x-1.5">
+          Já tem conta com este e-mail?
+          <AuthLink href={`/entrar?proximo=${encodeURIComponent(`/convite/${token}`)}`}>Entrar para aceitar</AuthLink>
+        </p>
+      </AuthFooter>
     </>
   );
 }

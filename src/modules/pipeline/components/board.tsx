@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarClock, Kanban, MapPin, UserRound, Users } from "lucide-react";
+import { motion } from "motion/react";
 import Link from "next/link";
 import { useState, useTransition, type DragEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn, formatDate, formatDateTime, formatMoney, formatRelative } from "@/lib/utils";
 import type { Opportunity, Stage } from "@/modules/crm/types";
 import { moveOpportunityAction } from "../actions";
+import { stageTone, stageToneBorder, stageToneDot } from "./stage-tone";
 
 type Props = {
   stages: Stage[];
@@ -21,12 +23,6 @@ type Props = {
 };
 
 type PendingMove = { opportunityId: string; stageId: string; afterId: string | null };
-
-const kindAccent: Record<Stage["kind"], string> = {
-  open: "bg-[var(--elz-gray-400)]",
-  won: "bg-brand",
-  lost: "bg-danger",
-};
 
 /**
  * Quadro Kanban. Arrastar e soltar com o mouse; no teclado e no toque, cada
@@ -62,7 +58,8 @@ export function Board({ stages, opportunities, timeZone, currentUserId, canMoveA
       const afterIndex = move.afterId ? column.findIndex((o) => o.id === move.afterId) : -1;
       const prev = afterIndex >= 0 ? column[afterIndex]!.position : null;
       const next = column[afterIndex + 1]?.position ?? null;
-      const position = prev === null && next === null ? 1000 : prev === null ? next! - 1000 : next === null ? prev + 1000 : (prev + next) / 2;
+      const position =
+        prev === null && next === null ? 1000 : prev === null ? next! - 1000 : next === null ? prev + 1000 : (prev + next) / 2;
       return list.map((o) =>
         o.id === move.opportunityId
           ? { ...o, stage_id: move.stageId, position, status: target.kind, lost_reason: target.kind === "lost" ? reason : null }
@@ -120,130 +117,167 @@ export function Board({ stages, opportunities, timeZone, currentUserId, canMoveA
   return (
     <>
       {/* relative: mantém dentro da área rolável os textos exclusivos de leitores de tela */}
-      <div className="relative -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <motion.div layoutScroll className="relative -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex min-w-max gap-3">
           {stages.map((stage) => {
             const column = byStage(stage.id);
             const total = column.reduce((sum, o) => sum + (o.currency === "BRL" ? (o.estimated_value_cents ?? 0) : 0), 0);
+            const tone = stageTone(stage, stages);
+            const isTarget = dragging !== null && overStage === stage.id;
             return (
               <section
                 key={stage.id}
                 aria-label={`Etapa ${stage.name}`}
                 onDragOver={(e) => {
                   e.preventDefault();
-                  setOverStage(stage.id);
+                  if (overStage !== stage.id) setOverStage(stage.id);
                 }}
                 onDragLeave={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverStage(null);
                 }}
                 onDrop={(e) => onDrop(e, stage.id, null)}
                 className={cn(
-                  "flex w-72 shrink-0 flex-col rounded-lg border bg-muted/60",
-                  overStage === stage.id ? "border-brand-strong" : "border-line",
+                  "flex w-72 shrink-0 flex-col rounded-lg border border-t-4 transition-colors duration-150",
+                  stageToneBorder[tone],
+                  isTarget ? "border-x-brand-strong border-b-brand-strong bg-brand-soft" : "border-x-line border-b-line bg-muted/60",
                 )}
               >
                 <header className="border-b border-line px-3 py-2.5">
                   <div className="flex items-center gap-2">
-                    <span className={cn("h-2 w-2 rounded-full", kindAccent[stage.kind])} aria-hidden="true" />
-                    <h2 className="min-w-0 flex-1 truncate text-[13px] font-bold">{stage.name}</h2>
-                    <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-fg-muted">{column.length}</span>
+                    <span className={cn("h-2 w-2 shrink-0 rounded-full", stageToneDot[tone])} aria-hidden="true" />
+                    <h2 className="min-w-0 flex-1 truncate text-label font-bold text-fg">{stage.name}</h2>
+                    <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-fg-muted tabular-nums">
+                      {column.length}
+                    </span>
                   </div>
-                  <p className="mt-0.5 pl-4 text-xs text-fg-subtle">{formatMoney(total)}</p>
+                  <p className="mt-0.5 pl-4 text-xs text-fg-subtle tabular-nums">{formatMoney(total)}</p>
                 </header>
                 <ul className="flex min-h-24 flex-1 flex-col gap-2 p-2">
                   {column.length === 0 ? (
-                    <li className="px-2 py-6 text-center text-xs text-fg-subtle">Nenhuma oportunidade nesta etapa</li>
-                  ) : null}
-                  {column.map((o) => (
                     <li
-                      key={o.id}
-                      draggable={canMove(o)}
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/plain", o.id);
-                        e.dataTransfer.effectAllowed = "move";
-                        setDragging(o.id);
-                      }}
-                      onDragEnd={() => {
-                        setDragging(null);
-                        setOverStage(null);
-                      }}
-                      onDrop={(e) => onDrop(e, stage.id, o.id)}
                       className={cn(
-                        "rounded-md border border-line bg-surface p-3 shadow-card",
-                        canMove(o) && "cursor-grab active:cursor-grabbing",
-                        dragging === o.id && "opacity-40",
+                        "rounded-md border border-dashed px-2 py-6 text-center text-xs transition-colors",
+                        isTarget ? "border-brand-strong text-brand-strong" : "border-transparent text-fg-subtle",
                       )}
                     >
-                      <Link href={`/funil/${o.id}`} className="block text-sm font-bold hover:underline" draggable={false}>
-                        {o.contact_name}
-                      </Link>
-                      {o.is_demo ? <Badge tone="info" className="mt-1">Demonstração</Badge> : null}
-                      <dl className="mt-2 space-y-1 text-xs text-fg-muted">
-                        {o.package_name || o.destination_interest ? (
-                          <div className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            <dt className="sr-only">Pacote ou destino</dt>
-                            <dd className="truncate">{o.package_name ?? o.destination_interest}</dd>
-                          </div>
+                      {isTarget ? "Solte aqui para mover" : "Nenhuma oportunidade nesta etapa"}
+                    </li>
+                  ) : null}
+                  {column.map((o) => (
+                    <motion.li
+                      key={o.id}
+                      layoutId={`oportunidade-${o.id}`}
+                      layout="position"
+                      transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                      className="list-none"
+                    >
+                      <div
+                        draggable={canMove(o)}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("text/plain", o.id);
+                          e.dataTransfer.effectAllowed = "move";
+                          setDragging(o.id);
+                        }}
+                        onDragEnd={() => {
+                          setDragging(null);
+                          setOverStage(null);
+                        }}
+                        onDrop={(e) => onDrop(e, stage.id, o.id)}
+                        className={cn(
+                          "rounded-md border border-line bg-surface p-3 shadow-card transition duration-150 hover:shadow-pop",
+                          canMove(o) && "cursor-grab active:scale-102 active:cursor-grabbing active:shadow-float",
+                          dragging === o.id && "scale-98 border-dashed border-brand-strong opacity-50 shadow-none",
+                        )}
+                      >
+                        <Link href={`/funil/${o.id}`} className="block text-sm font-bold text-fg hover:underline" draggable={false}>
+                          {o.contact_name}
+                        </Link>
+                        {o.is_demo ? (
+                          <Badge tone="info" className="mt-1">
+                            Demonstração
+                          </Badge>
                         ) : null}
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <dt className="sr-only">Valor estimado</dt>
-                            <dd className="text-[13px] font-semibold text-fg">{formatMoney(o.estimated_value_cents, o.currency)}</dd>
-                          </div>
-                          {o.travelers ? (
-                            <div className="flex items-center gap-1">
-                              <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                              <dt className="sr-only">Viajantes</dt>
-                              <dd>{o.travelers}</dd>
+                        <dl className="mt-2 space-y-1 text-xs text-fg-muted">
+                          {o.package_name || o.destination_interest ? (
+                            <div className="flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              <dt className="sr-only">Pacote ou destino</dt>
+                              <dd className="truncate">{o.package_name ?? o.destination_interest}</dd>
                             </div>
                           ) : null}
-                        </div>
-                        {o.departure_date || o.intended_date ? (
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <dt className="sr-only">Valor estimado</dt>
+                              <dd className="text-label font-semibold text-fg">{formatMoney(o.estimated_value_cents, o.currency)}</dd>
+                            </div>
+                            {o.travelers ? (
+                              <div className="flex items-center gap-1">
+                                <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                                <dt className="sr-only">Viajantes</dt>
+                                <dd>{o.travelers}</dd>
+                              </div>
+                            ) : null}
+                          </div>
+                          {o.departure_date || o.intended_date ? (
+                            <div>
+                              <dt className="inline">Data pretendida: </dt>
+                              <dd className="inline">{formatDate(o.departure_date ?? o.intended_date)}</dd>
+                            </div>
+                          ) : null}
+                          <div className="flex items-center gap-1.5">
+                            <UserRound className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <dt className="sr-only">Responsável</dt>
+                            <dd className="truncate">{o.owner_name ?? "Sem responsável"}</dd>
+                          </div>
+                          {o.next_contact_at ? (
+                            <div
+                              className={cn(
+                                "flex items-center gap-1.5",
+                                new Date(o.next_contact_at) < new Date() && o.status === "open" && "font-semibold text-danger",
+                              )}
+                            >
+                              <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              <dt className="sr-only">Próximo contato</dt>
+                              <dd>{formatDateTime(o.next_contact_at, timeZone)}</dd>
+                            </div>
+                          ) : null}
                           <div>
-                            <dt className="inline">Data pretendida: </dt>
-                            <dd className="inline">{formatDate(o.departure_date ?? o.intended_date)}</dd>
+                            <dt className="inline">Última interação: </dt>
+                            <dd className="inline">{o.last_interaction_at ? formatRelative(o.last_interaction_at) : "nenhuma"}</dd>
                           </div>
+                        </dl>
+                        {canMove(o) ? (
+                          <select
+                            aria-label={`Mover ${o.contact_name} para outra etapa`}
+                            value={o.stage_id}
+                            onChange={(e) =>
+                              requestMove({
+                                opportunityId: o.id,
+                                stageId: e.target.value,
+                                afterId:
+                                  byStage(e.target.value)
+                                    .filter((x) => x.id !== o.id)
+                                    .at(-1)?.id ?? null,
+                              })
+                            }
+                            className="mt-2.5 min-h-touch w-full cursor-pointer rounded border border-line bg-surface px-2 py-1 text-xs text-fg-muted transition-colors hover:border-line-strong sm:min-h-0"
+                          >
+                            {stages.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.id === o.stage_id ? `Etapa: ${s.name}` : `Mover para ${s.name}`}
+                              </option>
+                            ))}
+                          </select>
                         ) : null}
-                        <div className="flex items-center gap-1.5">
-                          <UserRound className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                          <dt className="sr-only">Responsável</dt>
-                          <dd className="truncate">{o.owner_name ?? "Sem responsável"}</dd>
-                        </div>
-                        {o.next_contact_at ? (
-                          <div className={cn("flex items-center gap-1.5", new Date(o.next_contact_at) < new Date() && o.status === "open" && "font-semibold text-danger")}>
-                            <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            <dt className="sr-only">Próximo contato</dt>
-                            <dd>{formatDateTime(o.next_contact_at, timeZone)}</dd>
-                          </div>
-                        ) : null}
-                        <div>
-                          <dt className="inline">Última interação: </dt>
-                          <dd className="inline">{o.last_interaction_at ? formatRelative(o.last_interaction_at) : "nenhuma"}</dd>
-                        </div>
-                      </dl>
-                      {canMove(o) ? (
-                        <select
-                          aria-label={`Mover ${o.contact_name} para outra etapa`}
-                          value={o.stage_id}
-                          onChange={(e) => requestMove({ opportunityId: o.id, stageId: e.target.value, afterId: byStage(e.target.value).filter((x) => x.id !== o.id).at(-1)?.id ?? null })}
-                          className="mt-2.5 w-full cursor-pointer rounded border border-line bg-surface px-2 py-1 text-xs text-fg-muted"
-                        >
-                          {stages.map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.id === o.stage_id ? `Etapa: ${s.name}` : `Mover para ${s.name}`}
-                            </option>
-                          ))}
-                        </select>
-                      ) : null}
-                    </li>
+                      </div>
+                    </motion.li>
                   ))}
                 </ul>
               </section>
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
       <Dialog open={lostPrompt !== null} onClose={() => setLostPrompt(null)} title="Motivo da perda" size="sm">
         <form
@@ -256,7 +290,7 @@ export function Board({ stages, opportunities, timeZone, currentUserId, canMoveA
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <label htmlFor="motivo-perda" className="block text-[13px] font-semibold">
+            <label htmlFor="motivo-perda" className="block text-label font-semibold">
               Por que esta oportunidade foi perdida?
             </label>
             <input

@@ -62,34 +62,32 @@ Mantida a sequência A → F pedida, com dois ajustes: uma **Etapa 0** de pré-r
 
 ---
 
-### Etapa 0 — Pré-requisitos de operação ☐
+### Etapa 0 — Ambientes ☑ (decidido em 16/11/2026)
 
-Sem funcionalidade nova. Depende do dono do produto nos itens marcados (D).
+O dono do produto definiu que **o projeto Supabase atual ("CRM ELOZIA") e a publicação em `elozia.vercel.app` são o ambiente de testes**. As migrations das fases B a F podem ser aplicadas nele. O ambiente de produção será criado depois, na etapa de lançamento.
 
-- ☐ (D) Criar um **segundo projeto Supabase só para testes**; aplicar as migrations e apontar o E2E para ele.
-- ☐ (D) Supabase Auth: Site URL e Redirect URLs de produção.
-- ☐ (D) SMTP próprio no Supabase Auth (exigido pelo convite do proprietário e pela recuperação de senha).
-- ☐ (D) Upstash Redis em produção (rate limiting entre instâncias).
-- ☐ Rotina de backup antes de cada migration em produção (`supabase db dump` documentado).
-- ☐ Decisões da seção "Decisões do produto" registradas neste arquivo.
+Pendências que passam para a etapa de lançamento (criação da produção): novo projeto Supabase de produção, URLs de autenticação, SMTP próprio, Upstash, rotina de backup antes de cada migration, e nenhum dado de teste levado para lá.
 
-Critério: o E2E completo roda no projeto de testes, não no de produção.
+As decisões D1 a D12 seguem a recomendação, salvo indicação em contrário do dono do produto.
 
-### Fase A — Fundação visual e navegação ☐
+### Fase A — Fundação visual e navegação ☑ (concluída em 16/11/2026)
 
 Não altera o banco. Não remove o cadastro público (vai para a Fase B).
 
-- ☐ Tokens completos: escala de verdes, status de negócio (lead, proposta, ganho, perdido), estados (hover, ativo, desabilitado, foco), tipografia e espaçamento. Substituir os ~169 valores arbitrários e hex soltos.
-- ☐ Componentes base: Drawer/painel lateral, DropdownMenu, PasswordField (mostrar/ocultar), Tooltip, Breadcrumbs, tabela que vira cartões no celular, skeletons por página, toasts e modais animados.
-- ☐ Motion (`motion@14`) só em menus, drawers, modais, Kanban e transições, respeitando `prefers-reduced-motion` também no JavaScript; carregado apenas em componentes cliente.
-- ☐ **Barra superior escura** no desktop com menu principal (Dashboard, Atendimentos, CRM, Viagens, Campanhas, Automações, Relatórios, Configurações), submenus suspensos, indicador ativo, progresso de navegação; navegação adaptada no celular.
-- ☐ Submenus mostram **apenas o que existe** (sem itens "em breve"): CRM › Contatos, Funil, Oportunidades, Tarefas; Configurações com menu lateral contextual (título + descrição por item).
-- ☐ Novas listas simples sobre dados existentes: Oportunidades (lista, além do Kanban) e Tarefas (global).
-- ☐ Login renovado: mostrar/ocultar senha, layout novo, mensagens de erro e loading.
-- ☐ Central de atendimento ajustada à nova altura do cabeçalho.
-- ☐ Revisão visual das 22 telas em desktop, tablet e celular; E2E atualizado para a nova navegação.
+- ☑ Tokens completos em `globals.css` (`@theme`): escala de verdes (green-700 com contraste 5,45:1), cinzas, estados, status de negócio (lead, andamento, proposta, ganho, perdido), barra superior, foco, raios, sombras, escala tipográfica nomeada (caption → metric), medidas nomeadas (topbar, drawer, inbox-list, touch, content) e movimento. Valores arbitrários e hex soltos substituídos; ficam só `grid-cols-[...]`, `has-[:checked]`, a lista de propriedades de transição do botão, `themeColor` do viewport, o padrão do seletor de cor das etiquetas (dado) e `global-error.tsx` (renderiza sem CSS).
+- ☑ Componentes base: Drawer (sobre `<dialog>`), DropdownMenu acessível, PasswordField, Breadcrumbs, DataList (tabela no desktop, cartões no celular), skeletons por tipo de página (`loading.tsx` por rota), toasts, modais animados. **Tooltip não criado**: nenhuma tela precisa hoje; entra com o construtor de chatbots (Fase E).
+- ☑ Motion (`motion@14.14.0`) só em componentes cliente (menus, indicador ativo da barra), com `MotionConfig reducedMotion="user"` e `prefers-reduced-motion` no CSS.
+- ☑ Barra superior escura com os 8 itens, submenus suspensos, indicador ativo animado, sinal de navegação pendente (`useLinkStatus`) e gaveta escura no celular. Sem sobreposição medida de 1024 a 1920 px.
+- ☑ Submenus só com o que existe: CRM › Contatos, Funil, Oportunidades, Tarefas; Viagens › Pacotes, Reservas; Configurações com menu lateral (título + descrição), Usuários e Equipes separados, Modelos com filtros.
+- ☑ Novas listas: `/oportunidades` (filtros, paginação) e `/tarefas` (global, com contagens e conclusão inline).
+- ☑ Login renovado: tela dividida, mostrar/ocultar senha em todas as telas, erros e carregamento.
+- ☑ Central de atendimento sem rolagem dupla na nova altura; testada com conversa fictícia em 375, 768, 1280 e 1536 px.
+- ☑ Revisão visual de 28 rotas em 375, 768 e 1280 px (sem erro de console, sem estouro horizontal); E2E atualizado (seletores de senha por `/^Senha/`, por causa do botão "Mostrar senha").
 
-Critério: todas as telas atuais funcionam na nova navegação, sem regressão no E2E, em três larguras.
+- ☑ Revisão independente (acessibilidade e correção) dos componentes base, com 17 correções: foco visível ao abrir a gaveta, conteúdo da gaveta mantido durante a saída, clique no fundo só fecha se começou no fundo, foco devolvido ao botão ao escolher item de menu, menu fecha ao trocar de rota e com toque no iPhone, contraste do texto secundário (4,80:1) e do placeholder, link dentro de link evitado no DataList, alvos de 44px na barra, modal longo rola só o corpo.
+- Pendências registradas para a Fase F (decisão visual): borda dos campos e botões secundários (gray-300, 1,48:1) abaixo dos 3:1 de componentes de interface; cabeçalho do menu do perfil como texto solto dentro de `role="menu"`.
+
+Critério atendido: tsc e eslint limpos, 197 testes unitários e de banco, build, E2E 20 passando (6 pulados por desenho no perfil celular).
 
 ### Fase B — Administração Master e acesso de suporte ☐
 
@@ -181,7 +179,7 @@ Cada item tem uma recomendação. Sem resposta, sigo a recomendação ao chegar 
 | # | Decisão | Recomendação | Afeta |
 |---|---|---|---|
 | D1 | Remover o cadastro público só na Fase B (depende da criação pelo Master) | Sim | A, B |
-| D2 | Segundo projeto Supabase para testes antes de qualquer migration nova | Sim, obrigatório | B em diante |
+| D2 | Ambiente de testes | **Decidido:** o projeto atual é o de testes; a produção será criada no lançamento | B em diante |
 | D3 | Consentimento por origem | Dentro da janela de 24 h, em conversa iniciada pelo cliente (chatbot, resposta), e templates de **utilidade** para cliente com relação comercial: basta não ter opt-out. Templates de **marketing** e campanhas: exigem consentimento registrado. | D, E |
 | D4 | Janela fixa 8h–20h | Substituir por horário de atendimento configurável por agência; campanhas e sequências respeitam; chatbot responde a qualquer hora | D, E |
 | D5 | Sequências × automações atuais | Sequências substituem a tela de automações; cada automação existente vira sequência de 1 etapa, migrada sem perder histórico | D |

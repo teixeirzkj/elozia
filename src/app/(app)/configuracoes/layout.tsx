@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { SettingsNav, type SettingsNavId } from "@/components/layout/settings-nav";
 import { PageHeader } from "@/components/ui/primitives";
-import { NavTabs, type TabItem } from "@/components/ui/tabs";
 import { requireMembership } from "@/lib/auth/session";
 import { can } from "@/lib/permissions";
 
@@ -8,22 +8,20 @@ export default async function ConfiguracoesLayout({ children }: { children: Reac
   const { membership } = await requireMembership();
   const role = membership.role;
 
-  const tabs: TabItem[] = [
-    { href: "/configuracoes", label: "Agência", exact: true },
-    { href: "/configuracoes/perfil", label: "Meu perfil" },
-    { href: "/configuracoes/equipe", label: "Equipe" },
-    { href: "/configuracoes/permissoes", label: "Permissões" },
-  ];
-  if (can(role, "settings.crm")) {
-    tabs.push({ href: "/configuracoes/funil", label: "Funil" }, { href: "/configuracoes/etiquetas", label: "Etiquetas" });
-  }
-  if (can(role, "channels.manage")) tabs.push({ href: "/configuracoes/canais", label: "Canais" });
+  // Só ids serializáveis vão para o cliente; ícones e textos ficam no componente.
+  const allowed: SettingsNavId[] = ["empresa", "perfil", "usuarios", "equipes"];
+  if (can(role, "channels.manage")) allowed.push("canais");
+  if (can(role, "automations.manage")) allowed.push("modelos");
+  if (can(role, "settings.crm")) allowed.push("etiquetas", "funil");
+  allowed.push("permissoes");
 
   return (
     <>
-      <PageHeader title="Configurações" description="Dados da agência, equipe e preferências do sistema." />
-      <NavTabs items={tabs} label="Seções das configurações" />
-      {children}
+      <PageHeader title="Configurações" description="Dados da agência, equipe, canais e preferências do sistema." />
+      <div className="lg:flex lg:items-stretch lg:gap-8">
+        <SettingsNav allowed={allowed} />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
     </>
   );
 }

@@ -89,12 +89,12 @@ export function ContactDialog({ contact, members, tags }: { contact?: Contact; m
           </div>
           {tags.length > 0 ? (
             <fieldset>
-              <legend className="mb-1.5 text-[13px] font-semibold">Etiquetas</legend>
+              <legend className="mb-1.5 text-label font-semibold">Etiquetas</legend>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <label
                     key={tag.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-full border border-line px-3 py-1.5 text-[13px] has-[:checked]:border-ink has-[:checked]:bg-muted"
+                    className="flex cursor-pointer items-center gap-2 rounded-full border border-line px-3 py-1.5 text-label has-[:checked]:border-ink has-[:checked]:bg-muted"
                   >
                     <input type="checkbox" name="tags" value={tag.id} defaultChecked={selected.has(tag.id)} className="sr-only" />
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tag.color }} aria-hidden="true" />

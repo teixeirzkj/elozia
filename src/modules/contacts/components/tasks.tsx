@@ -105,13 +105,16 @@ export function TaskList({
         const overdue = !done && task.due_at !== null && new Date(task.due_at).getTime() < now;
         return (
           <li key={task.id} className="flex items-start gap-3 px-5 py-3">
-            <input
-              type="checkbox"
-              checked={done}
-              onChange={(e) => toggle(task, e.target.checked)}
-              aria-label={`Concluir: ${task.title}`}
-              className="mt-1 h-4 w-4 cursor-pointer accent-[var(--elz-green-strong)]"
-            />
+            {/* No celular, a área de toque do checkbox tem 44px sem alterar o alinhamento visual. */}
+            <label className="-mx-3 -my-2.5 flex min-h-touch min-w-touch shrink-0 cursor-pointer items-center justify-center sm:m-0 sm:mt-1 sm:block sm:min-h-0 sm:min-w-0">
+              <input
+                type="checkbox"
+                checked={done}
+                onChange={(e) => toggle(task, e.target.checked)}
+                aria-label={`Concluir: ${task.title}`}
+                className="h-4 w-4 cursor-pointer"
+              />
+            </label>
             <div className="min-w-0 flex-1">
               <p className={cn("text-sm font-medium", done && "text-fg-subtle line-through")}>{task.title}</p>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted">
@@ -130,7 +133,7 @@ export function TaskList({
                 ) : null}
                 {task.origin === "automation" ? <Badge tone="info">Automação</Badge> : null}
               </p>
-              {task.notes ? <p className="mt-1 text-[13px] whitespace-pre-line text-fg-muted">{task.notes}</p> : null}
+              {task.notes ? <p className="mt-1 text-label whitespace-pre-line text-fg-muted">{task.notes}</p> : null}
             </div>
           </li>
         );

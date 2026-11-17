@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   createContext,
   useActionState,
@@ -8,6 +8,7 @@ import {
   useEffect,
   useId,
   useRef,
+  useState,
   useTransition,
   type FormEvent,
   type InputHTMLAttributes,
@@ -97,17 +98,17 @@ export function Field({ name, label, hint, required, className, children }: Fiel
   const describedBy = hasError ? `${id}-erro` : hint ? `${id}-dica` : undefined;
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label htmlFor={id} className="block text-[13px] font-semibold text-fg">
+      <label htmlFor={id} className="block text-label font-semibold text-fg">
         {label}
         {required ? <span className="text-danger" aria-hidden="true"> *</span> : null}
       </label>
       {children({ id, name, "aria-invalid": hasError, "aria-describedby": describedBy })}
       {hasError ? (
-        <p id={`${id}-erro`} className="text-[13px] text-danger" role="alert">
+        <p id={`${id}-erro`} className="text-label text-danger" role="alert">
           {errors?.[0]}
         </p>
       ) : hint ? (
-        <p id={`${id}-dica`} className="text-[13px] text-fg-subtle">
+        <p id={`${id}-dica`} className="text-label text-fg-subtle">
           {hint}
         </p>
       ) : null}
@@ -129,6 +130,48 @@ export function TextField({
   return (
     <Field name={name} label={label} hint={hint} required={required} className={fieldClassName}>
       {(field) => <input {...props} {...field} required={required} className={cn("elz-field", className)} />}
+    </Field>
+  );
+}
+
+/** Campo de senha com botão para mostrar e ocultar o que foi digitado. */
+export function PasswordField({
+  name,
+  label,
+  hint,
+  fieldClassName,
+  required,
+  className,
+  ...props
+}: Common & Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <Field name={name} label={label} hint={hint} required={required} className={fieldClassName}>
+      {(field) => (
+        <div className="relative">
+          <input
+            {...props}
+            {...field}
+            type={visible ? "text" : "password"}
+            required={required}
+            autoCapitalize="none"
+            spellCheck={false}
+            className={cn("elz-field pr-11", className)}
+          />
+          <button
+            type="button"
+            onClick={() => setVisible((value) => !value)}
+            // Botão alternado: rótulo FIXO e o estado em aria-pressed. Trocar o
+            // rótulo junto faria o leitor anunciar "Ocultar senha, pressionado".
+            aria-label="Mostrar senha"
+            aria-pressed={visible}
+            aria-controls={field.id}
+            className="absolute inset-y-0 right-0 flex w-11 cursor-pointer items-center justify-center rounded-r-md text-fg-subtle transition-colors hover:text-fg"
+          >
+            {visible ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+          </button>
+        </div>
+      )}
     </Field>
   );
 }

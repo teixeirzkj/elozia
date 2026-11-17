@@ -97,32 +97,38 @@ export function Composer({ conversationId, organizationId, windowOpen, templates
   const showTemplates = mode === "message" && canMessage && !windowOpen;
 
   return (
-    <div className="border-t border-line bg-surface p-3">
-      <div className="mb-2 flex items-center gap-1" role="tablist" aria-label="Tipo de envio">
-        {(
-          [
-            ["message", "Mensagem", Send],
-            ["note", "Nota interna", StickyNote],
-          ] as const
-        ).map(([value, label, Icon]) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={mode === value}
-            onClick={() => {
-              setMode(value);
-              setError(null);
-            }}
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-semibold",
-              mode === value ? (value === "note" ? "bg-warning-soft text-warning" : "bg-muted text-fg") : "text-fg-muted hover:text-fg",
-            )}
-          >
-            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-            {label}
-          </button>
-        ))}
+    <div className={cn("border-t bg-surface px-3 pt-2.5 pb-3 transition-colors sm:px-4", mode === "note" ? "border-warning/30" : "border-line")}>
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+        {/* Controle segmentado: botões com aria-pressed (não há painéis de abas separados). */}
+        <div className="inline-flex rounded-md bg-muted p-0.5" role="group" aria-label="Tipo de envio">
+          {(
+            [
+              ["message", "Mensagem", Send],
+              ["note", "Nota interna", StickyNote],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={mode === value}
+              onClick={() => {
+                setMode(value);
+                setError(null);
+              }}
+              className={cn(
+                "flex h-8 cursor-pointer items-center gap-1.5 rounded-sm px-3 text-label font-semibold transition-colors duration-150 max-md:h-touch max-md:px-4",
+                mode === value
+                  ? value === "note"
+                    ? "bg-warning-soft text-warning shadow-card"
+                    : "bg-surface text-fg shadow-card"
+                  : "text-fg-muted hover:text-fg",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </div>
         {mode === "message" && canMessage && windowOpen && timeLabel ? (
           <span className="ml-auto flex items-center gap-1 text-xs text-fg-subtle">
             <Clock className="h-3.5 w-3.5" aria-hidden="true" />
@@ -148,7 +154,14 @@ export function Composer({ conversationId, organizationId, windowOpen, templates
           {mode === "message" ? (
             <>
               <input ref={fileRef} type="file" accept={ACCEPT} className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files?.[0])} />
-              <Button variant="ghost" size="icon" disabled={busy} onClick={() => fileRef.current?.click()} aria-label="Anexar imagem, áudio ou documento">
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={busy}
+                onClick={() => fileRef.current?.click()}
+                aria-label="Anexar imagem, áudio ou documento"
+                className="h-10 w-10 shrink-0 max-md:h-touch max-md:w-touch"
+              >
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Paperclip className="h-4 w-4" aria-hidden="true" />}
               </Button>
             </>
@@ -164,11 +177,18 @@ export function Composer({ conversationId, organizationId, windowOpen, templates
             rows={2}
             maxLength={mode === "note" ? 4000 : 4096}
             placeholder={mode === "note" ? "Nota visível apenas para a equipe" : "Escreva uma mensagem. Enter envia, Shift+Enter quebra a linha."}
-            className={cn("elz-field max-h-40 min-h-[44px] flex-1 resize-none", mode === "note" && "bg-warning-soft")}
+            className={cn("elz-field max-h-40 min-h-touch min-w-0 flex-1 resize-none", mode === "note" && "border-warning/40 bg-warning-soft")}
           />
-          <Button type="submit" variant={mode === "note" ? "secondary" : "brand"} disabled={busy || text.trim() === ""} aria-busy={pending}>
+          <Button
+            type="submit"
+            variant={mode === "note" ? "secondary" : "brand"}
+            disabled={busy || text.trim() === ""}
+            aria-busy={pending}
+            aria-label={mode === "note" ? "Salvar nota" : "Enviar"}
+            className="shrink-0 max-md:h-touch max-md:w-touch max-md:px-0"
+          >
             {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
-            <span className="hidden sm:inline">{mode === "note" ? "Salvar nota" : "Enviar"}</span>
+            <span className="hidden md:inline">{mode === "note" ? "Salvar nota" : "Enviar"}</span>
           </Button>
         </form>
       )}
@@ -196,13 +216,14 @@ function TemplateForm({ conversationId, templates }: { conversationId: string; t
   }
 
   return (
-    <div className="space-y-3">
+    // Limita a altura para o histórico continuar visível; o formulário rola por dentro.
+    <div className="max-h-72 space-y-3 overflow-y-auto overscroll-contain md:max-h-96">
       <Alert tone="warning" title="Fora da janela de 24 horas">
         A Meta só permite mensagens livres até 24 horas depois da última mensagem do cliente. Agora é possível enviar apenas um
         template aprovado; quando o cliente responder, a conversa livre volta a ficar disponível.
       </Alert>
       {usable.length === 0 ? (
-        <p className="text-[13px] text-fg-muted">
+        <p className="text-label text-fg-muted">
           Nenhum template aprovado disponível. Crie e aprove templates no Gerenciador do WhatsApp da Meta e sincronize em
           Configurações › Canais.
         </p>
@@ -210,7 +231,7 @@ function TemplateForm({ conversationId, templates }: { conversationId: string; t
         <form onSubmit={submit} className="space-y-3">
           {error ? <Alert tone="danger">{error}</Alert> : null}
           <div className="space-y-1.5">
-            <label htmlFor="template-select" className="block text-[13px] font-semibold">
+            <label htmlFor="template-select" className="block text-label font-semibold">
               Template aprovado
             </label>
             <select id="template-select" name="template_id" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="elz-field">
@@ -223,14 +244,14 @@ function TemplateForm({ conversationId, templates }: { conversationId: string; t
           </div>
           {selected ? (
             <>
-              <p className="rounded-md bg-muted p-3 text-[13px] whitespace-pre-line text-fg-muted">
+              <p className="rounded-md bg-muted p-3 text-label whitespace-pre-line text-fg-muted">
                 {[selected.spec.headerText, selected.spec.bodyText, selected.spec.footerText].filter(Boolean).join("\n\n")}
               </p>
               <div className="grid gap-3 sm:grid-cols-2" key={selected.id}>
                 {[...selected.spec.headerParams.map((p) => [`header_${p}`, `Cabeçalho {{${p}}}`] as const), ...selected.spec.bodyParams.map((p) => [`body_${p}`, `Variável {{${p}}}`] as const)].map(
                   ([name, label]) => (
                     <div key={name} className="space-y-1.5">
-                      <label htmlFor={`tpl-${name}`} className="block text-[13px] font-semibold">
+                      <label htmlFor={`tpl-${name}`} className="block text-label font-semibold">
                         {label}
                       </label>
                       <input id={`tpl-${name}`} name={name} required maxLength={1000} className="elz-field" />
@@ -240,7 +261,7 @@ function TemplateForm({ conversationId, templates }: { conversationId: string; t
               </div>
             </>
           ) : null}
-          <Button type="submit" variant="brand" disabled={pending || !selected} aria-busy={pending}>
+          <Button type="submit" variant="brand" disabled={pending || !selected} aria-busy={pending} className="max-md:h-touch max-md:w-full">
             {pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
             Enviar template
           </Button>

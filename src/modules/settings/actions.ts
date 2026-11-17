@@ -92,7 +92,7 @@ export async function inviteMemberAction(_prev: ActionState, formData: FormData)
       entity: "invitation",
       metadata: { role: parsed.data.role },
     });
-    revalidatePath("/configuracoes/equipe");
+    revalidatePath("/configuracoes/usuarios");
     return ok("Convite criado. Copie o link e envie para a pessoa convidada.", {
       link: `${await origin()}/convite/${token}`,
       email: parsed.data.email,
@@ -112,7 +112,7 @@ export async function revokeInvitationAction(invitationId: string): Promise<Acti
       .eq("organization_id", membership.organization.id)
       .is("accepted_at", null);
     if (error) throw error;
-    revalidatePath("/configuracoes/equipe");
+    revalidatePath("/configuracoes/usuarios");
     return ok("Convite cancelado.");
   } catch (error) {
     return failFrom(error);
@@ -131,7 +131,7 @@ export async function updateMemberAction(_prev: ActionState, formData: FormData)
       p_status: parsed.data.status,
     });
     if (error) throw error;
-    revalidatePath("/configuracoes/equipe");
+    revalidatePath("/configuracoes/usuarios");
     return ok("Colaborador atualizado.");
   } catch (error) {
     return failFrom(error);
@@ -165,7 +165,7 @@ export async function saveTeamAction(teamId: string | null, _prev: ActionState, 
         .insert(parsed.data.members.map((user_id) => ({ organization_id: orgId, team_id: id, user_id })));
       if (insError) throw insError;
     }
-    revalidatePath("/configuracoes/equipe");
+    revalidatePath("/configuracoes/equipes");
     return ok("Equipe salva.");
   } catch (error) {
     return failFrom(error, "Não foi possível salvar a equipe. Verifique se o nome já está em uso.");
@@ -177,7 +177,7 @@ export async function deleteTeamAction(teamId: string): Promise<ActionState> {
     const { supabase, membership } = await authorize("settings.crm");
     const { error } = await supabase.from("teams").delete().eq("id", teamId).eq("organization_id", membership.organization.id);
     if (error) throw error;
-    revalidatePath("/configuracoes/equipe");
+    revalidatePath("/configuracoes/equipes");
     return ok("Equipe excluída.");
   } catch (error) {
     return failFrom(error);

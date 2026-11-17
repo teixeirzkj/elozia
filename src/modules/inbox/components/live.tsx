@@ -51,7 +51,7 @@ export function Thread({ conversationId, lastMessageId, unread, children }: { co
     if (unread > 0) void markReadAction(conversationId);
   }, [conversationId, unread, lastMessageId]);
   return (
-    <div ref={ref} className="flex-1 overflow-y-auto bg-bg px-3 py-4 sm:px-5" role="log" aria-label="Histórico da conversa" tabIndex={0}>
+    <div ref={ref} className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-bg px-3 py-4 sm:px-6" role="log" aria-label="Histórico da conversa" tabIndex={0}>
       {children}
     </div>
   );
@@ -75,7 +75,7 @@ export function RetryButton({ action, label }: { action: () => Promise<ActionSta
           }
         })
       }
-      className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold underline underline-offset-2 disabled:opacity-50"
+      className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold underline underline-offset-2 disabled:opacity-50 max-md:min-h-touch"
     >
       <RotateCw className={pending ? "h-3 w-3 animate-spin" : "h-3 w-3"} aria-hidden="true" />
       {label}

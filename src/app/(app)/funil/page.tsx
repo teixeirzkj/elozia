@@ -54,7 +54,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
         }
       />
       <form method="get" className="mb-4 flex flex-wrap gap-2">
-        <select name="responsavel" defaultValue={params.responsavel ?? ""} aria-label="Filtrar por responsável" className="elz-field w-auto min-w-48">
+        <select
+          name="responsavel"
+          defaultValue={params.responsavel ?? ""}
+          aria-label="Filtrar por responsável"
+          className="elz-field w-full sm:w-auto sm:min-w-48"
+        >
           <option value="">Todos os responsáveis</option>
           <option value={user.id}>Minhas oportunidades</option>
           <option value="nenhum">Sem responsável</option>
@@ -66,7 +71,12 @@ export default async function FunilPage({ searchParams }: { searchParams: Promis
               </option>
             ))}
         </select>
-        <select name="pacote" defaultValue={params.pacote ?? ""} aria-label="Filtrar por pacote" className="elz-field w-auto min-w-48">
+        <select
+          name="pacote"
+          defaultValue={params.pacote ?? ""}
+          aria-label="Filtrar por pacote"
+          className="elz-field w-full sm:w-auto sm:min-w-48"
+        >
           <option value="">Todos os pacotes</option>
           {packages.map((p) => (
             <option key={p.id} value={p.id}>

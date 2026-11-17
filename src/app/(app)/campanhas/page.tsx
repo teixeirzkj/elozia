@@ -2,6 +2,7 @@ import { Megaphone, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/button";
+import { DataList } from "@/components/ui/data-list";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireMembership } from "@/lib/auth/session";
 import { can } from "@/lib/permissions";
@@ -11,13 +12,24 @@ import { CAMPAIGN_STATUS_LABELS } from "@/modules/campaigns/types";
 
 export const metadata: Metadata = { title: "Campanhas" };
 
-const statusTone = { draft: "neutral", scheduled: "info", running: "warning", completed: "brand", cancelled: "neutral", failed: "danger" } as const;
+const statusTone = {
+  draft: "neutral",
+  scheduled: "info",
+  running: "progress",
+  completed: "won",
+  cancelled: "neutral",
+  failed: "danger",
+} as const;
 
 export default async function CampanhasPage() {
   const { supabase, membership } = await requireMembership();
   const orgId = membership.organization.id;
   const campaigns = await listCampaigns(supabase, orgId);
-  const counts = await recipientCounts(supabase, orgId, campaigns.filter((c) => c.total_recipients > 0).map((c) => c.id));
+  const counts = await recipientCounts(
+    supabase,
+    orgId,
+    campaigns.filter((c) => c.total_recipients > 0).map((c) => c.id),
+  );
   const canManage = can(membership.role, "automations.manage");
   const tz = membership.organization.timezone;
 
@@ -48,54 +60,56 @@ export default async function CampanhasPage() {
             action={canManage ? <LinkButton href="/campanhas/nova">Criar campanha</LinkButton> : undefined}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="elz-table">
-              <thead>
-                <tr>
-                  <th scope="col">Campanha</th>
-                  <th scope="col">Pacote</th>
-                  <th scope="col">Template</th>
-                  <th scope="col">Envio</th>
-                  <th scope="col">Situação</th>
-                  <th scope="col">Resultado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {campaigns.map((c) => {
+          <DataList
+            caption="Campanhas da agência"
+            rows={campaigns}
+            getKey={(c) => c.id}
+            columns={[
+              {
+                key: "campanha",
+                header: "Campanha",
+                primary: true,
+                cell: (c) => (
+                  <Link href={`/campanhas/${c.id}`} className="font-semibold hover:underline">
+                    {c.name}
+                  </Link>
+                ),
+              },
+              { key: "pacote", header: "Pacote", className: "text-fg-muted", cell: (c) => c.package_name ?? "—" },
+              { key: "template", header: "Template", hideOnMobile: true, className: "text-fg-muted", cell: (c) => c.template_name ?? "—" },
+              {
+                key: "envio",
+                header: "Envio",
+                className: "text-label whitespace-nowrap",
+                cell: (c) => (c.scheduled_at ? formatDateTime(c.scheduled_at, tz) : "Sem data"),
+              },
+              {
+                key: "situacao",
+                header: "Situação",
+                cell: (c) => <Badge tone={statusTone[c.status]}>{CAMPAIGN_STATUS_LABELS[c.status]}</Badge>,
+              },
+              {
+                key: "resultado",
+                header: "Resultado",
+                className: "text-label md:whitespace-nowrap",
+                cell: (c) => {
                   const stats = counts.get(c.id) ?? {};
-                  return (
-                    <tr key={c.id}>
-                      <td>
-                        <Link href={`/campanhas/${c.id}`} className="font-semibold hover:underline">
-                          {c.name}
-                        </Link>
-                      </td>
-                      <td className="text-fg-muted">{c.package_name ?? "—"}</td>
-                      <td className="text-fg-muted">{c.template_name ?? "—"}</td>
-                      <td className="text-[13px] whitespace-nowrap">{c.scheduled_at ? formatDateTime(c.scheduled_at, tz) : "Sem data"}</td>
-                      <td>
-                        <Badge tone={statusTone[c.status]}>{CAMPAIGN_STATUS_LABELS[c.status]}</Badge>
-                      </td>
-                      <td className="text-[13px] whitespace-nowrap">
-                        {c.total_recipients === 0 ? (
-                          <span className="text-fg-subtle">{c.status === "completed" ? "Sem destinatários elegíveis" : "Ainda não enviada"}</span>
-                        ) : (
-                          <>
-                            {stats.sent ?? 0} de {c.total_recipients} enviadas
-                            {(stats.failed ?? 0) > 0 ? (
-                              <Badge tone="danger" className="ml-2">
-                                {stats.failed} com falha
-                              </Badge>
-                            ) : null}
-                          </>
-                        )}
-                      </td>
-                    </tr>
+                  return c.total_recipients === 0 ? (
+                    <span className="text-fg-subtle">{c.status === "completed" ? "Sem destinatários elegíveis" : "Ainda não enviada"}</span>
+                  ) : (
+                    <>
+                      {stats.sent ?? 0} de {c.total_recipients} enviadas
+                      {(stats.failed ?? 0) > 0 ? (
+                        <Badge tone="danger" className="ml-2">
+                          {stats.failed} com falha
+                        </Badge>
+                      ) : null}
+                    </>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+                },
+              },
+            ]}
+          />
         )}
       </Card>
     </>

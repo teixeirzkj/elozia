@@ -294,7 +294,7 @@ export function BookingDialog({
             ))}
           </SelectField>
           <fieldset className="space-y-4 rounded-md border border-line p-4">
-            <legend className="px-1 text-[13px] font-semibold">Pagamento declarado</legend>
+            <legend className="px-1 text-label font-semibold">Pagamento declarado</legend>
             <div className="grid gap-4 sm:grid-cols-3">
               <SelectField name="payment_status" label="Situação" defaultValue={booking?.payment_status ?? "pending"} required>
                 {Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => (

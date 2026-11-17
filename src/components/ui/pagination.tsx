@@ -26,7 +26,7 @@ export function Pagination({
     return qs ? `${basePath}?${qs}` : basePath;
   };
   return (
-    <nav aria-label="Paginação" className="flex items-center justify-between gap-3 border-t border-line px-5 py-3 text-[13px]">
+    <nav aria-label="Paginação" className="flex items-center justify-between gap-3 border-t border-line px-5 py-3 text-label">
       <p className="text-fg-muted">
         Página {page} de {pages} · {total} {total === 1 ? "registro" : "registros"}
       </p>

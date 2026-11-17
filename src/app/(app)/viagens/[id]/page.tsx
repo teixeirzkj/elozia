@@ -1,8 +1,9 @@
-import { ArrowLeft, CalendarDays, Megaphone, Plane, Trash2 } from "lucide-react";
+import { CalendarDays, Megaphone, Plane, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { LinkButton } from "@/components/ui/button";
+import { DataList } from "@/components/ui/data-list";
 import { ConfirmButton } from "@/components/ui/dialog";
 import { Badge, Card, CardBody, CardHeader, EmptyState } from "@/components/ui/primitives";
 import { requireMembership } from "@/lib/auth/session";
@@ -30,13 +31,10 @@ export default async function PacotePage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <Link href="/viagens" className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-fg-muted hover:text-fg">
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Pacotes
-      </Link>
+      <Breadcrumbs items={[{ label: "Viagens", href: "/viagens" }, { label: pkg.name }]} />
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{pkg.name}</h1>
+          <h1 className="text-heading font-bold tracking-tight break-words text-fg sm:text-display">{pkg.name}</h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-fg-muted">
             <Badge tone={statusTone[pkg.status]}>{ITEM_STATUS_LABELS[pkg.status]}</Badge>
             {pkg.is_demo ? <Badge tone="info">Demonstração</Badge> : null}
@@ -85,68 +83,77 @@ export default async function PacotePage({ params }: { params: Promise<{ id: str
               className="py-10"
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="elz-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Saída</th>
-                    <th scope="col">Retorno</th>
-                    <th scope="col">Valor por pessoa</th>
-                    <th scope="col">Vagas (interno)</th>
-                    <th scope="col">Situação</th>
-                    {canManage ? <th scope="col" className="text-right">Ações</th> : null}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pkg.departures.map((d) => {
-                    const reserved = booked.get(d.id) ?? 0;
-                    return (
-                      <tr key={d.id}>
-                        <td className="font-semibold whitespace-nowrap">{formatDate(d.departs_on)}</td>
-                        <td className="whitespace-nowrap">{formatDate(d.returns_on)}</td>
-                        <td className="whitespace-nowrap">{formatMoney(d.price_cents ?? pkg.price_cents, pkg.currency)}</td>
-                        <td className="whitespace-nowrap">
-                          {d.seats_total == null ? (
-                            <span className="text-fg-subtle">Não controladas</span>
-                          ) : (
-                            <>
-                              {d.seats_total}
-                              <span className="text-xs text-fg-subtle"> · {reserved} em reservas</span>
-                            </>
-                          )}
-                        </td>
-                        <td>
-                          <Badge tone={statusTone[d.status]}>{feminine(ITEM_STATUS_LABELS[d.status])}</Badge>
-                        </td>
-                        {canManage ? (
-                          <td>
-                            <div className="flex justify-end gap-1">
-                              <DepartureDialog packageId={pkg.id} departure={d} />
-                              <ConfirmButton
-                                icon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
-                                ariaLabel={`Excluir saída de ${formatDate(d.departs_on)}`}
-                                buttonSize="icon"
-                                variant="ghost"
-                                title="Excluir saída"
-                                description={`A saída de ${formatDate(d.departs_on)} será excluída.`}
-                                confirmLabel="Excluir"
-                                action={deleteDepartureAction.bind(null, pkg.id, d.id)}
-                              />
-                            </div>
-                          </td>
-                        ) : null}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <DataList
+              caption={`Saídas do pacote ${pkg.name}`}
+              rows={pkg.departures}
+              getKey={(d) => d.id}
+              columns={[
+                {
+                  key: "saida",
+                  header: "Saída",
+                  primary: true,
+                  className: "font-semibold whitespace-nowrap",
+                  cell: (d) => formatDate(d.departs_on),
+                },
+                { key: "retorno", header: "Retorno", className: "whitespace-nowrap", cell: (d) => formatDate(d.returns_on) },
+                {
+                  key: "valor",
+                  header: "Valor por pessoa",
+                  className: "whitespace-nowrap tabular-nums",
+                  cell: (d) => formatMoney(d.price_cents ?? pkg.price_cents, pkg.currency),
+                },
+                {
+                  key: "vagas",
+                  header: "Vagas (interno)",
+                  className: "whitespace-nowrap",
+                  cell: (d) =>
+                    d.seats_total == null ? (
+                      <span className="text-fg-subtle">Não controladas</span>
+                    ) : (
+                      <>
+                        {d.seats_total}
+                        <span className="text-xs text-fg-subtle"> · {booked.get(d.id) ?? 0} em reservas</span>
+                      </>
+                    ),
+                },
+                {
+                  key: "situacao",
+                  header: "Situação",
+                  cell: (d) => <Badge tone={statusTone[d.status]}>{feminine(ITEM_STATUS_LABELS[d.status])}</Badge>,
+                },
+                ...(canManage
+                  ? [
+                      {
+                        key: "acoes",
+                        header: "Ações",
+                        align: "end" as const,
+                        actions: true,
+                        cell: (d: (typeof pkg.departures)[number]) => (
+                          <div className="flex justify-end gap-1">
+                            <DepartureDialog packageId={pkg.id} departure={d} />
+                            <ConfirmButton
+                              icon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
+                              ariaLabel={`Excluir saída de ${formatDate(d.departs_on)}`}
+                              buttonSize="icon"
+                              variant="ghost"
+                              title="Excluir saída"
+                              description={`A saída de ${formatDate(d.departs_on)} será excluída.`}
+                              confirmLabel="Excluir"
+                              action={deleteDepartureAction.bind(null, pkg.id, d.id)}
+                            />
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           )}
         </Card>
 
         <div className="space-y-6">
           <Card className="overflow-hidden">
-            <div className="flex aspect-[16/9] items-center justify-center bg-muted">
+            <div className="flex aspect-video items-center justify-center bg-muted">
               {image ? (
                 // eslint-disable-next-line @next/next/no-img-element -- URL assinada e temporária do bucket privado
                 <img src={image} alt={`Imagem do pacote ${pkg.name}`} className="h-full w-full object-cover" />

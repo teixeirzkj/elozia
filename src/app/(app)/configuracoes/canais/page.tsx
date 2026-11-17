@@ -1,17 +1,19 @@
-import { FileText, MessageCircle } from "lucide-react";
+import { ArrowRight, FileText, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { Alert } from "@/components/ui/alert";
+import { LinkButton } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/ui/dialog";
 import { Badge, Card, CardBody, CardHeader, EmptyState } from "@/components/ui/primitives";
 import { requireCapabilityPage } from "@/lib/auth/session";
+import { can } from "@/lib/permissions";
 import { decryptSecret } from "@/lib/crypto";
 import { optionalServerSecret } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDateTime } from "@/lib/utils";
 import { disconnectChannelAction } from "@/modules/channels/actions";
 import { ConnectForm, SyncTemplatesButton } from "@/modules/channels/components/channel-forms";
-import { listChannels, listTemplates, TEMPLATE_CATEGORY_LABELS, TEMPLATE_STATUS_LABELS } from "@/modules/channels/queries";
+import { listChannels, listTemplates } from "@/modules/channels/queries";
 
 export const metadata: Metadata = { title: "Canais" };
 
@@ -42,6 +44,8 @@ export default async function CanaisPage() {
   const tz = membership.organization.timezone;
   const [channels, templates] = await Promise.all([listChannels(supabase, orgId), listTemplates(supabase, orgId)]);
   const active = channels.filter((c) => c.status !== "disconnected");
+  const approvedCount = templates.filter((t) => t.status === "APPROVED").length;
+  const canTemplates = can(membership.role, "automations.manage");
   const hasGlobalApp = Boolean(optionalServerSecret("META_APP_SECRET"));
 
   const h = await headers();
@@ -85,14 +89,14 @@ export default async function CanaisPage() {
                 {channel.last_error}
               </Alert>
             ) : null}
-            <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+            <dl className="grid gap-x-6 gap-y-3 text-body sm:grid-cols-2">
               <div>
                 <dt className="text-fg-muted">WABA ID</dt>
-                <dd className="font-medium">{channel.waba_id}</dd>
+                <dd className="font-medium break-all">{channel.waba_id}</dd>
               </div>
               <div>
                 <dt className="text-fg-muted">Phone Number ID</dt>
-                <dd className="font-medium">{channel.phone_number_id}</dd>
+                <dd className="font-medium break-all">{channel.phone_number_id}</dd>
               </div>
               <div>
                 <dt className="text-fg-muted">Qualidade informada pela Meta</dt>
@@ -107,7 +111,7 @@ export default async function CanaisPage() {
             {channel.status !== "disconnected" ? (
               <>
                 {channel.uses_own_app ? (
-                  <div className="space-y-2 rounded-md border border-line p-4 text-sm">
+                  <div className="space-y-2 rounded-md border border-line p-4 text-body">
                     <p className="font-semibold">Configuração do webhook no aplicativo da Meta</p>
                     <p className="text-fg-muted">
                       No aplicativo da agência, em WhatsApp › Configuração, informe os dados abaixo e assine o campo{" "}
@@ -115,11 +119,11 @@ export default async function CanaisPage() {
                     </p>
                     <p>
                       <span className="text-fg-muted">URL de callback: </span>
-                      <code className="rounded bg-muted px-1.5 py-0.5 text-[13px] break-all">{webhookUrl}</code>
+                      <code className="rounded-sm bg-muted px-1.5 py-0.5 text-label break-all">{webhookUrl}</code>
                     </p>
                     <p>
                       <span className="text-fg-muted">Token de verificação: </span>
-                      <code className="rounded bg-muted px-1.5 py-0.5 text-[13px] break-all">
+                      <code className="rounded-sm bg-muted px-1.5 py-0.5 text-label break-all">
                         {verifyTokens.get(channel.id) ?? "indisponível (verifique a configuração do servidor)"}
                       </code>
                     </p>
@@ -135,6 +139,7 @@ export default async function CanaisPage() {
                   <SyncTemplatesButton channelId={channel.id} />
                   <ConfirmButton
                     label="Desconectar"
+                    className="max-md:min-h-touch"
                     title="Desconectar canal"
                     description="A agência deixa de enviar e receber mensagens por este número e o token é apagado do sistema. As conversas e o histórico são mantidos."
                     confirmLabel="Desconectar"
@@ -143,7 +148,7 @@ export default async function CanaisPage() {
                 </div>
                 {channel.status === "error" ? (
                   <div className="border-t border-line pt-5">
-                    <p className="mb-3 text-sm font-semibold">Reconectar com novas credenciais</p>
+                    <p className="mb-3 text-body font-semibold">Reconectar com novas credenciais</p>
                     <ConnectForm requireAppSecret={!hasGlobalApp} reconnect={{ wabaId: channel.waba_id, phoneNumberId: channel.phone_number_id }} />
                   </div>
                 ) : null}
@@ -154,48 +159,28 @@ export default async function CanaisPage() {
       ))}
 
       {active.length > 0 ? (
-        <Card className="overflow-hidden">
-          <CardHeader
-            title="Templates de mensagem"
-            description="Criados e aprovados no Gerenciador do WhatsApp da Meta. Fora da janela de 24 horas, só templates aprovados podem ser enviados."
-          />
-          {templates.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title="Nenhum template sincronizado"
-              description="Crie templates no Gerenciador do WhatsApp da Meta e use Sincronizar templates para trazê-los."
-              className="py-10"
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="elz-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">Idioma</th>
-                    <th scope="col">Categoria</th>
-                    <th scope="col">Situação na Meta</th>
-                    <th scope="col">Uso no sistema</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {templates.map((t) => (
-                    <tr key={t.id}>
-                      <td className="font-medium">{t.name}</td>
-                      <td>{t.language}</td>
-                      <td>{TEMPLATE_CATEGORY_LABELS[t.category] ?? t.category}</td>
-                      <td>
-                        <Badge tone={t.status === "APPROVED" ? "brand" : t.status === "PENDING" ? "warning" : "neutral"}>
-                          {TEMPLATE_STATUS_LABELS[t.status] ?? t.status}
-                        </Badge>
-                      </td>
-                      <td className="text-[13px] text-fg-muted">{t.spec.supported ? "Disponível" : t.spec.reason}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <Card>
+          <CardBody className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-green-50 text-green-700">
+                <FileText className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-title font-bold text-fg">Modelos de mensagem</h2>
+                <p className="mt-0.5 text-label text-fg-muted">
+                  {templates.length === 0
+                    ? "Nenhum modelo sincronizado ainda. Use Sincronizar templates no canal acima."
+                    : `${templates.length} ${templates.length === 1 ? "modelo sincronizado" : "modelos sincronizados"}, ${approvedCount} ${approvedCount === 1 ? "aprovado" : "aprovados"} pela Meta.`}
+                </p>
+              </div>
             </div>
-          )}
+            {canTemplates ? (
+              <LinkButton href="/configuracoes/modelos" variant="secondary" className="max-md:min-h-touch">
+                Ver modelos de mensagem
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </LinkButton>
+            ) : null}
+          </CardBody>
         </Card>
       ) : null}
 

@@ -16,9 +16,9 @@ export default function ConfiguracaoPendentePage() {
         <h1 className="text-xl font-bold tracking-tight">Configuração pendente</h1>
         <p className="mt-2 text-sm text-fg-muted">
           Este ambiente ainda não está ligado a um projeto Supabase. Defina as variáveis{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-[13px]">NEXT_PUBLIC_SUPABASE_URL</code> e{" "}
-          <code className="rounded bg-muted px-1 py-0.5 text-[13px]">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> conforme o
-          arquivo <code className="rounded bg-muted px-1 py-0.5 text-[13px]">.env.example</code> e a documentação de
+          <code className="rounded bg-muted px-1 py-0.5 text-label">NEXT_PUBLIC_SUPABASE_URL</code> e{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-label">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> conforme o
+          arquivo <code className="rounded bg-muted px-1 py-0.5 text-label">.env.example</code> e a documentação de
           deploy, e reinicie a aplicação.
         </p>
       </main>

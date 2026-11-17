@@ -54,7 +54,7 @@ export function InviteDialog({ roles }: { roles: Role[] }) {
                 readOnly
                 value={created.link}
                 aria-label="Link do convite"
-                className="elz-field font-mono text-xs"
+                className="elz-field font-mono text-caption"
                 onFocus={(e) => e.currentTarget.select()}
               />
               <Button variant="secondary" onClick={copy} aria-label="Copiar link do convite">
@@ -101,6 +101,7 @@ export function MemberDialog({ member, roles }: { member: MemberRow; roles: Role
       variant="secondary"
       buttonSize="sm"
       ariaLabel={`Editar ${member.full_name}`}
+      className="max-md:min-h-touch"
       title={member.full_name}
       description={member.email}
     >
@@ -152,6 +153,7 @@ export function TeamDialog({ members, team }: { members: Array<{ id: string; nam
       variant={team ? "ghost" : "secondary"}
       buttonSize={team ? "icon" : "md"}
       ariaLabel={team ? `Editar equipe ${team.name}` : undefined}
+      className={team ? "max-md:h-touch max-md:w-touch" : undefined}
       title={team ? "Editar equipe" : "Nova equipe"}
     >
       {(close) => (
@@ -165,16 +167,16 @@ export function TeamDialog({ members, team }: { members: Array<{ id: string; nam
         >
           <TextField name="name" label="Nome da equipe" defaultValue={team?.name ?? ""} required maxLength={80} />
           <fieldset>
-            <legend className="mb-1.5 text-[13px] font-semibold">Participantes</legend>
+            <legend className="mb-1.5 text-label font-semibold">Participantes</legend>
             <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border border-line p-2">
               {members.map((m) => (
-                <label key={m.id} className="flex cursor-pointer items-center gap-2.5 rounded px-2 py-1.5 text-sm hover:bg-muted">
+                <label key={m.id} className="flex cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 text-body hover:bg-muted max-md:min-h-touch">
                   <input
                     type="checkbox"
                     name="members"
                     value={m.id}
                     defaultChecked={team?.member_ids.includes(m.id)}
-                    className="h-4 w-4 accent-[var(--elz-green-strong)]"
+                    className="h-4 w-4"
                   />
                   {m.name}
                 </label>

@@ -6,7 +6,15 @@ import { PROPOSAL_STATUS_LABELS, type ProposalStatus } from "@/modules/crm/types
 import { setProposalStatusAction } from "../actions";
 
 /** Troca rápida da situação de uma proposta. */
-export function ProposalStatusMenu({ opportunityId, proposalId, status }: { opportunityId: string; proposalId: string; status: ProposalStatus }) {
+export function ProposalStatusMenu({
+  opportunityId,
+  proposalId,
+  status,
+}: {
+  opportunityId: string;
+  proposalId: string;
+  status: ProposalStatus;
+}) {
   const [pending, startTransition] = useTransition();
   const toast = useToast();
   return (
@@ -22,7 +30,7 @@ export function ProposalStatusMenu({ opportunityId, proposalId, status }: { oppo
           else toast.error(result.error ?? "Não foi possível atualizar a proposta.");
         });
       }}
-      className="cursor-pointer rounded-md border border-line-strong bg-surface px-2 py-1.5 text-[13px]"
+      className="min-h-touch cursor-pointer rounded-md border border-line-strong bg-surface px-2 py-1.5 text-label text-fg transition-colors hover:border-fg-subtle disabled:opacity-60 sm:min-h-0"
     >
       {Object.entries(PROPOSAL_STATUS_LABELS).map(([value, label]) => (
         <option key={value} value={value}>

@@ -37,8 +37,8 @@ src/
     (app)/             área autenticada: dashboard, atendimentos, contatos, funil,
                        viagens, automacoes, campanhas, relatorios, configuracoes
     api/               webhooks/whatsapp, cron/*, exportações
-  components/ui/       design system (Button, Input, Dialog, EmptyState, ...)
-  components/layout/   Sidebar, Header, navegação mobile
+  components/ui/       design system (Button, formulários, Dialog, Drawer, DataList, ...)
+  components/layout/   barra superior, mapa de navegação, menu de configurações
   modules/<modulo>/    actions.ts (Server Actions), queries.ts, schemas.ts (Zod),
                        components/, lógica pura testável
   lib/                 supabase/, auth/, permissions.ts, crypto.ts, rate-limit.ts,
@@ -61,11 +61,24 @@ docs/
 - Em migrations novas, conceda privilégios só às tabelas criadas nelas (`grant ... on public.<tabela>`). Nunca `grant ... on all tables`: isso reabriria `whatsapp_credentials`, `webhook_events` e `jobs`, que são só do servidor.
 - Mensagens do WhatsApp saem sempre por `sendToConversation` (`src/lib/whatsapp/service.ts`), que aplica janela de 24 h, consentimento e opt-out. Não chame a Graph API direto dos módulos.
 - Os testes de banco rodam em PGlite (sem Docker). O que depende de PostgREST, Auth, Storage ou Realtime só é coberto pelo E2E em um projeto Supabase de testes.
+- No E2E, localize campos de senha por regex (`getByLabel(/^Senha/)`): o rótulo acessível inclui o asterisco e o botão "Mostrar senha" também casa com "Senha". Textos que aparecem duas vezes (versão celular e desktop) pedem `.filter({ visible: true }).first()`.
 - Funções novas em `public`: revogar `EXECUTE` de `public` e `anon` explicitamente; liberar só a quem precisa.
 - A partir da Fase B, toda tabela nova é classificada como **administrativa** (leitura por `app.can_read_org`) ou **privada** (leitura por `app.can_read_private`). `app.is_member` nunca passa a considerar o suporte, porque aparece em regras de escrita.
 - `createAdminClient()` (ignora a RLS) só depois de `authorize(capability)` e com `organization_id` explícito; o papel "support" é recusado em toda ação que escreve.
 - Animações com `motion` respeitam `prefers-reduced-motion`; bibliotecas pesadas (`motion`, `recharts`, `@xyflow/react`) só em componentes cliente da rota que as usa.
 - Itens de menu só aparecem quando a funcionalidade existe.
+
+## Design system
+
+Fonte única: `src/app/globals.css` (variáveis `--elz-*` em `:root`, expostas ao Tailwind em `@theme`).
+
+- **Tipografia:** `text-caption` 11 · `text-label` 13 · `text-body` 14 · `text-title` 15 · `text-heading` 20 · `text-display` 24 · `text-metric` 28 (px). Além disso, a escala padrão do Tailwind (`text-xs`, `text-sm`, `text-base`).
+- **Cores:** `ink`, `brand` (#00DF73), `green-50…900`, superfícies (`bg`, `surface`, `muted`, `hover`, `pressed`), texto (`fg`, `fg-muted`, `fg-subtle`, `fg-disabled`), funcionais (`success`, `danger`, `warning`, `info` + `-soft`), status de negócio (`status-lead|progress|proposal|won|lost` + `-soft`), barra superior (`topbar*`).
+- **Medidas nomeadas:** `h-topbar`, `h-header`, `w-drawer`, `w-drawer-lg`, `w-settings-nav`, `w-aside`, `w-inbox-list`, `min-h-touch` (44 px), `max-w-content`.
+- **Proibido:** hex e valores arbitrários (`text-[13px]`, `w-[340px]`, `bg-[var(--x)]`). Exceções aceitas: templates de grade (`grid-cols-[...]`) e variantes (`has-[:checked]`). Precisa de um valor novo? Crie o token no `globals.css`.
+- **Componentes base** em `src/components/ui/`: `Button`/`LinkButton`, formulários (`ActionForm`, `TextField`, `PasswordField`, `SelectField`...), `Dialog`/`ConfirmButton`, `Drawer` (painel lateral), `DropdownMenu`, `Breadcrumbs`, `DataList` (tabela no desktop, cartões no celular), `Badge` (inclui tons de status), `Stat`, `EmptyState` e esqueletos (`PageSkeleton`, `TableSkeleton`, `CardGridSkeleton`, `DetailSkeleton`, `BoardSkeleton`). Use-os antes de criar outro.
+- **Navegação:** `src/components/layout/nav.ts` é o mapa único do menu; só entra o que existe.
+- **Movimento:** transições curtas (`--elz-duration*`, `ease-elz`), `animate-rise-in` para entrada, `motion/react` só onde agrega; `prefers-reduced-motion` respeitado pelo CSS global e pelo `MotionConfig`.
 
 ## Papéis
 

@@ -2,18 +2,34 @@
 
 /* ==========================================================================
    Design system Elozia
-   Todas as cores e medidas partem destas variáveis. Componentes não usam hex.
+   Todas as cores, medidas e tempos partem destas variáveis.
+   Componentes não usam hex nem valores arbitrários (text-[13px], w-[340px]...).
+   Para um valor novo, crie o token aqui e exponha no @theme.
    ========================================================================== */
 
 :root {
-  /* Marca */
+  /* ---- Marca ------------------------------------------------------------ */
   --elz-black: #0a0a0a;
   --elz-white: #ffffff;
   --elz-green: #00df73;
-  --elz-green-strong: #008a47; /* verde legível como texto sobre branco */
-  --elz-green-soft: #e5fcf1;
 
-  /* Neutros */
+  /* Escala de verde (50 = fundo suave, 700+ = texto legível sobre branco) */
+  --elz-green-50: #ebfdf3;
+  --elz-green-100: #cdfae1;
+  --elz-green-200: #9df3c6;
+  --elz-green-300: #5ce8a2;
+  --elz-green-400: #1fdd80;
+  --elz-green-500: #00df73;
+  --elz-green-600: #00b85e;
+  --elz-green-700: #007a3f; /* 5,45:1 sobre branco (AA em texto pequeno) */
+  --elz-green-800: #00622f;
+  --elz-green-900: #054f2d;
+
+  /* Aliases históricos, usados pelos componentes existentes */
+  --elz-green-strong: var(--elz-green-700);
+  --elz-green-soft: var(--elz-green-50);
+
+  /* ---- Neutros ---------------------------------------------------------- */
   --elz-gray-50: #fafafa;
   --elz-gray-100: #f4f4f5;
   --elz-gray-200: #e4e4e7;
@@ -24,8 +40,11 @@
   --elz-gray-700: #3f3f46;
   --elz-gray-800: #27272a;
   --elz-gray-900: #18181b;
+  --elz-gray-950: #111113;
 
-  /* Semânticas */
+  /* ---- Cores funcionais ------------------------------------------------- */
+  --elz-success: var(--elz-green-700);
+  --elz-success-soft: var(--elz-green-50);
   --elz-danger: #c81e1e;
   --elz-danger-soft: #fdecec;
   --elz-warning: #9a5b00;
@@ -33,42 +52,131 @@
   --elz-info: #1d4ed8;
   --elz-info-soft: #e8efff;
 
-  /* Papéis de superfície */
+  /* ---- Status de negócio (funil, propostas, reservas) ------------------- */
+  --elz-status-lead: #6d28d9;
+  --elz-status-lead-soft: #f1ebfd;
+  --elz-status-progress: var(--elz-info);
+  --elz-status-progress-soft: var(--elz-info-soft);
+  --elz-status-proposal: #b45309;
+  --elz-status-proposal-soft: #fdf1e3;
+  --elz-status-won: var(--elz-green-700);
+  --elz-status-won-soft: var(--elz-green-50);
+  --elz-status-lost: var(--elz-danger);
+  --elz-status-lost-soft: var(--elz-danger-soft);
+
+  /* ---- Papéis de superfície --------------------------------------------- */
   --elz-bg: var(--elz-gray-50);
   --elz-surface: var(--elz-white);
   --elz-surface-muted: var(--elz-gray-100);
+  --elz-surface-hover: var(--elz-gray-100);
+  --elz-surface-pressed: var(--elz-gray-200);
   --elz-border: var(--elz-gray-200);
   --elz-border-strong: var(--elz-gray-300);
   --elz-text: var(--elz-black);
   --elz-text-muted: var(--elz-gray-600);
-  --elz-text-subtle: var(--elz-gray-500);
+  /* 4,8:1 sobre o fundo de hover (gray-100) e 5,3:1 sobre branco: AA em texto pequeno.
+     O gray-500 puro dava 4,4:1 no hover dos menus. */
+  --elz-text-subtle: #6b6b74;
+  --elz-text-disabled: var(--elz-gray-400);
+  --elz-overlay: rgb(10 10 10 / 0.45);
 
+  /* Barra superior (escura) */
+  --elz-topbar: var(--elz-black);
+  --elz-topbar-line: var(--elz-gray-800);
+  --elz-topbar-text: var(--elz-gray-300);
+  --elz-topbar-text-strong: var(--elz-white);
+  --elz-topbar-hover: var(--elz-gray-900);
+  --elz-topbar-active: rgb(0 223 115 / 0.14);
+
+  /* Estados de interação */
+  --elz-focus-ring: var(--elz-green-700);
+  --elz-focus-halo: var(--elz-green-100);
+  --elz-primary-hover: var(--elz-gray-800);
+  --elz-brand-hover: var(--elz-green-400);
+
+  /* ---- Raios e sombras -------------------------------------------------- */
   --elz-radius-sm: 6px;
   --elz-radius: 10px;
   --elz-radius-lg: 14px;
+  --elz-radius-xl: 20px;
   --elz-shadow-sm: 0 1px 2px rgb(10 10 10 / 0.05);
   --elz-shadow: 0 8px 24px -8px rgb(10 10 10 / 0.14);
-  --elz-sidebar-width: 248px;
-  --elz-header-height: 60px;
+  --elz-shadow-lg: 0 24px 48px -16px rgb(10 10 10 / 0.22);
+
+  /* ---- Medidas de layout ------------------------------------------------ */
+  --elz-topbar-height: 56px;
+  --elz-subnav-height: 0px; /* sem faixa extra de navegação */
+  --elz-header-height: calc(var(--elz-topbar-height) + var(--elz-subnav-height));
+  --elz-content-max: 1400px;
+  --elz-drawer-width: 440px;
+  --elz-drawer-width-lg: 560px;
+  --elz-settings-nav-width: 280px;
+  --elz-aside-width: 360px;
+  --elz-inbox-list-width: 340px;
+  --elz-touch-target: 44px;
+
+  /* ---- Movimento -------------------------------------------------------- */
+  --elz-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --elz-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --elz-duration-fast: 120ms;
+  --elz-duration: 180ms;
+  --elz-duration-slow: 280ms;
 }
 
 @theme inline {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
+  /* Tipografia: escala própria (complementa a do Tailwind) */
+  --text-caption: 0.6875rem; /* 11px: rótulos minúsculos, contadores */
+  --text-caption--line-height: 1rem;
+  --text-label: 0.8125rem; /* 13px: rótulos, texto secundário, tabelas densas */
+  --text-label--line-height: 1.25rem;
+  --text-body: 0.875rem; /* 14px: texto padrão */
+  --text-body--line-height: 1.375rem;
+  --text-title: 0.9375rem; /* 15px: títulos de cartão */
+  --text-title--line-height: 1.375rem;
+  --text-heading: 1.25rem; /* 20px: título de página (celular) */
+  --text-heading--line-height: 1.75rem;
+  --text-display: 1.5rem; /* 24px: título de página */
+  --text-display--line-height: 2rem;
+  --text-metric: 1.75rem; /* 28px: números de indicadores */
+  --text-metric--line-height: 2.125rem;
+
+  /* Cores */
   --color-ink: var(--elz-black);
   --color-brand: var(--elz-green);
   --color-brand-strong: var(--elz-green-strong);
   --color-brand-soft: var(--elz-green-soft);
+  --color-brand-hover: var(--elz-brand-hover);
+  --color-green-50: var(--elz-green-50);
+  --color-green-100: var(--elz-green-100);
+  --color-green-200: var(--elz-green-200);
+  --color-green-300: var(--elz-green-300);
+  --color-green-400: var(--elz-green-400);
+  --color-green-500: var(--elz-green-500);
+  --color-green-600: var(--elz-green-600);
+  --color-green-700: var(--elz-green-700);
+  --color-green-800: var(--elz-green-800);
+  --color-green-900: var(--elz-green-900);
 
   --color-bg: var(--elz-bg);
   --color-surface: var(--elz-surface);
   --color-muted: var(--elz-surface-muted);
+  --color-hover: var(--elz-surface-hover);
+  --color-pressed: var(--elz-surface-pressed);
   --color-line: var(--elz-border);
   --color-line-strong: var(--elz-border-strong);
   --color-fg: var(--elz-text);
   --color-fg-muted: var(--elz-text-muted);
   --color-fg-subtle: var(--elz-text-subtle);
+  --color-fg-disabled: var(--elz-text-disabled);
+  --color-primary-hover: var(--elz-primary-hover);
+  --color-overlay: var(--elz-overlay);
+  --color-neutral-200: var(--elz-gray-200);
+  --color-neutral-400: var(--elz-gray-400);
 
+  --color-success: var(--elz-success);
+  --color-success-soft: var(--elz-success-soft);
   --color-danger: var(--elz-danger);
   --color-danger-soft: var(--elz-danger-soft);
   --color-warning: var(--elz-warning);
@@ -76,16 +184,109 @@
   --color-info: var(--elz-info);
   --color-info-soft: var(--elz-info-soft);
 
-  --color-sidebar: var(--elz-black);
-  --color-sidebar-line: var(--elz-gray-800);
-  --color-sidebar-fg: var(--elz-gray-300);
-  --color-sidebar-hover: var(--elz-gray-900);
+  --color-status-lead: var(--elz-status-lead);
+  --color-status-lead-soft: var(--elz-status-lead-soft);
+  --color-status-progress: var(--elz-status-progress);
+  --color-status-progress-soft: var(--elz-status-progress-soft);
+  --color-status-proposal: var(--elz-status-proposal);
+  --color-status-proposal-soft: var(--elz-status-proposal-soft);
+  --color-status-won: var(--elz-status-won);
+  --color-status-won-soft: var(--elz-status-won-soft);
+  --color-status-lost: var(--elz-status-lost);
+  --color-status-lost-soft: var(--elz-status-lost-soft);
 
+  --color-topbar: var(--elz-topbar);
+  --color-topbar-line: var(--elz-topbar-line);
+  --color-topbar-fg: var(--elz-topbar-text);
+  --color-topbar-fg-strong: var(--elz-topbar-text-strong);
+  --color-topbar-hover: var(--elz-topbar-hover);
+  --color-topbar-active: var(--elz-topbar-active);
+
+  /* Raios e sombras */
   --radius-sm: var(--elz-radius-sm);
   --radius-md: var(--elz-radius);
   --radius-lg: var(--elz-radius-lg);
+  --radius-xl: var(--elz-radius-xl);
   --shadow-card: var(--elz-shadow-sm);
   --shadow-pop: var(--elz-shadow);
+  --shadow-float: var(--elz-shadow-lg);
+
+  /* Medidas nomeadas (geram w-*, max-w-*, h-* etc.) */
+  --spacing-topbar: var(--elz-topbar-height);
+  --spacing-header: var(--elz-header-height);
+  --spacing-drawer: var(--elz-drawer-width);
+  --spacing-drawer-lg: var(--elz-drawer-width-lg);
+  --spacing-settings-nav: var(--elz-settings-nav-width);
+  --spacing-aside: var(--elz-aside-width);
+  --spacing-inbox-list: var(--elz-inbox-list-width);
+  --spacing-touch: var(--elz-touch-target);
+  --container-content: var(--elz-content-max);
+
+  /* Movimento */
+  --ease-elz: var(--elz-ease-out);
+  --ease-elz-in-out: var(--elz-ease-in-out);
+  --animate-fade-in: elz-fade-in var(--elz-duration) var(--elz-ease-out);
+  --animate-rise-in: elz-rise-in var(--elz-duration-slow) var(--elz-ease-out);
+  --animate-shimmer: elz-shimmer 1.4s linear infinite;
+}
+
+@keyframes elz-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes elz-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes elz-slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes elz-slide-from-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes elz-slide-to-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes elz-slide-to-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes elz-shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
 }
 
 html {
@@ -105,7 +306,7 @@ body {
 
 /* Foco visível e consistente para navegação por teclado */
 :focus-visible {
-  outline: 2px solid var(--elz-green-strong);
+  outline: 2px solid var(--elz-focus-ring);
   outline-offset: 2px;
 }
 
@@ -115,7 +316,14 @@ body {
 }
 
 dialog::backdrop {
-  background: rgb(10 10 10 / 0.45);
+  background: var(--elz-overlay);
+  animation: elz-fade-in var(--elz-duration) var(--elz-ease-out);
+}
+
+/* Checkbox e rádio na cor da marca */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--elz-green-700);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -123,7 +331,9 @@ dialog::backdrop {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -138,18 +348,27 @@ dialog::backdrop {
     padding: 8px 12px;
     font-size: 14px;
     color: var(--elz-text);
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+      border-color var(--elz-duration-fast) var(--elz-ease-out),
+      box-shadow var(--elz-duration-fast) var(--elz-ease-out);
   }
+  /* Placeholder com contraste AA (o gray-400 dava 2,6:1). */
   .elz-field::placeholder {
-    color: var(--elz-gray-400);
+    color: var(--elz-text-subtle);
   }
   .elz-field:hover {
     border-color: var(--elz-gray-400);
   }
   .elz-field:focus-visible {
     outline: none;
-    border-color: var(--elz-green-strong);
-    box-shadow: 0 0 0 3px var(--elz-green-soft);
+    border-color: var(--elz-focus-ring);
+    box-shadow: 0 0 0 3px var(--elz-focus-halo);
+  }
+  /* Alvo de toque mínimo de 44px em telas de toque estreitas */
+  @media (max-width: 767px) {
+    .elz-field {
+      min-height: var(--elz-touch-target);
+    }
   }
   .elz-field:disabled {
     background: var(--elz-surface-muted);
@@ -158,6 +377,9 @@ dialog::backdrop {
   }
   .elz-field[aria-invalid="true"] {
     border-color: var(--elz-danger);
+  }
+  .elz-field[aria-invalid="true"]:focus-visible {
+    box-shadow: 0 0 0 3px var(--elz-danger-soft);
   }
 
   /* Tabela de dados */
@@ -184,7 +406,63 @@ dialog::backdrop {
   .elz-table tbody tr:last-child td {
     border-bottom: 0;
   }
+  .elz-table tbody tr {
+    transition: background-color var(--elz-duration-fast) var(--elz-ease-out);
+  }
   .elz-table tbody tr:hover td {
     background: var(--elz-gray-50);
+  }
+
+  /* Esqueleto de carregamento com brilho */
+  .elz-skeleton {
+    border-radius: var(--elz-radius-sm);
+    background: linear-gradient(90deg, var(--elz-gray-200) 25%, var(--elz-gray-100) 37%, var(--elz-gray-200) 63%);
+    background-size: 400% 100%;
+    animation: elz-shimmer 1.4s linear infinite;
+  }
+
+  /* Modal centralizado */
+  .elz-dialog {
+    width: calc(100% - 2rem);
+    max-height: 85vh;
+  }
+  .elz-dialog[open] {
+    animation: elz-rise-in var(--elz-duration-slow) var(--elz-ease-out);
+  }
+
+  /* Painel lateral: desliza ao abrir e ao fechar */
+  .elz-drawer[open].elz-drawer-right {
+    animation: elz-slide-from-right var(--elz-duration-slow) var(--elz-ease-out);
+  }
+  .elz-drawer[open].elz-drawer-left {
+    animation: elz-slide-from-left var(--elz-duration-slow) var(--elz-ease-out);
+  }
+  .elz-drawer[data-closing].elz-drawer-right {
+    animation: elz-slide-to-right var(--elz-duration) var(--elz-ease-in-out) forwards;
+  }
+  .elz-drawer[data-closing].elz-drawer-left {
+    animation: elz-slide-to-left var(--elz-duration) var(--elz-ease-in-out) forwards;
+  }
+
+  /* Cartão de DataList com rowHref: o link de fundo recebe os cliques nas áreas
+     vazias; o conteúdo fica por cima sem capturar o ponteiro, exceto os controles. */
+  .elz-card-content {
+    pointer-events: none;
+  }
+  .elz-card-content :is(a, button, input, select, textarea, label, summary, [tabindex]) {
+    pointer-events: auto;
+  }
+
+  /* Cartão interativo (lista de pacotes, indicadores clicáveis) */
+  .elz-card-hover {
+    transition:
+      box-shadow var(--elz-duration) var(--elz-ease-out),
+      transform var(--elz-duration) var(--elz-ease-out),
+      border-color var(--elz-duration) var(--elz-ease-out);
+  }
+  .elz-card-hover:hover {
+    box-shadow: var(--elz-shadow);
+    border-color: var(--elz-border-strong);
+    transform: translateY(-1px);
   }
 }

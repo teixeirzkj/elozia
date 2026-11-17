@@ -5,6 +5,7 @@ import { ActionForm, SelectField, SubmitButton, TextField } from "@/components/u
 import { requireUser } from "@/lib/auth/session";
 import { TIMEZONES } from "@/lib/timezones";
 import { createOrganizationAction, signOutAction } from "@/modules/auth/actions";
+import { AuthHeading } from "../_components/auth-ui";
 
 export const metadata: Metadata = { title: "Configurar agência" };
 
@@ -17,10 +18,11 @@ export default async function BoasVindasPage() {
 
   return (
     <>
-      <h1 className="text-xl font-bold tracking-tight">Configure sua agência</h1>
-      <p className="mt-1 mb-5 text-sm text-fg-muted">
-        Olá, {session.user.fullName}. Confirme os dados para criar o ambiente da sua agência. Se você foi convidado por
-        uma agência, use o link do convite em vez deste formulário.
+      <AuthHeading title="Configure sua agência">
+        Olá, {session.user.fullName}. Confirme os dados para criar o ambiente da sua agência.
+      </AuthHeading>
+      <p className="-mt-3 mb-6 rounded-md bg-muted px-3 py-2.5 text-label text-fg-muted">
+        Foi convidado por uma agência? Use o link do convite em vez deste formulário.
       </p>
       <ActionForm action={createOrganizationAction}>
         <TextField name="name" label="Nome da agência" defaultValue={suggested} required maxLength={120} />
@@ -37,10 +39,10 @@ export default async function BoasVindasPage() {
             </option>
           ))}
         </SelectField>
-        <SubmitButton className="w-full">Criar agência</SubmitButton>
+        <SubmitButton className="min-h-touch w-full">Criar agência</SubmitButton>
       </ActionForm>
-      <form action={signOutAction} className="mt-4">
-        <Button type="submit" variant="ghost" className="w-full">
+      <form action={signOutAction} className="mt-3">
+        <Button type="submit" variant="ghost" className="min-h-touch w-full">
           Sair
         </Button>
       </form>

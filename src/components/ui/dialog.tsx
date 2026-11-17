@@ -23,6 +23,7 @@ const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl" };
 export function Dialog({ open, onClose, title, description, children, size = "md" }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const downOnBackdrop = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -37,22 +38,28 @@ export function Dialog({ open, onClose, title, description, children, size = "md
       aria-labelledby={titleId}
       onClose={onClose}
       onCancel={onClose}
+      // Só fecha pelo fundo se o toque também começou no fundo: arrastar uma
+      // seleção de dentro do modal e soltar fora gera click no próprio <dialog>.
+      onPointerDown={(e) => {
+        downOnBackdrop.current = e.target === ref.current;
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        if (e.target === ref.current && downOnBackdrop.current) onClose();
+        downOnBackdrop.current = false;
       }}
       className={cn(
-        "m-auto w-[calc(100%-2rem)] rounded-lg border border-line bg-surface p-0 text-fg shadow-pop",
+        "elz-dialog m-auto rounded-xl open:flex open:flex-col border border-line bg-surface p-0 text-fg shadow-float",
         widths[size],
       )}
     >
       {open ? (
-        <div className="flex max-h-[85vh] flex-col">
+        <div className="flex min-h-0 flex-col">
           <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div className="min-w-0">
               <h2 id={titleId} className="text-base font-bold">
                 {title}
               </h2>
-              {description ? <p className="mt-0.5 text-[13px] text-fg-muted">{description}</p> : null}
+              {description ? <p className="mt-0.5 text-label text-fg-muted">{description}</p> : null}
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar" className="-mr-2 -mt-1">
               <X className="h-4 w-4" aria-hidden="true" />
